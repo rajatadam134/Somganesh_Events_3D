@@ -29,24 +29,13 @@ html, body {
   color: var(--text-main);
   font-family: var(--font-sans);
   overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent-color) #0c0c0c;
+  scrollbar-width: none; /* Hide scrollbar in Firefox */
+  -ms-overflow-style: none; /* Hide scrollbar in IE/Edge */
 }
 
-/* Custom Scrollbar for Webkit */
+/* Hide scrollbar for Webkit browsers (Chrome, Safari, Opera, Edge) */
 ::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #080808;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.3);
-  border-radius: 3px;
-  transition: var(--transition-fast);
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.6);
+  display: none;
 }
 
 /* Background Grid & Vignette */
