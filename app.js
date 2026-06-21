@@ -229,6 +229,10 @@ let particleCount = 200;
 let mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
 let activeFocusedIndex = -1;
 
+// Mobile 3D Inline Zoom State
+let zoomedCardIndex = -1;
+let zoomedCardProgress = { value: 0.0 };
+
 // --- INITIALIZATION ---
 function init() {
   checkScreenSize();
@@ -426,6 +430,8 @@ function buildGallery(loadedCards) {
       title: cardData.title,
       category: cardData.category,
       baseIndex: cardData.uniqueIndex % loadedCards.length,
+      uniqueIndex: cardData.uniqueIndex,
+      zoomProgress: 0.0,
       tiltX: 0,
       tiltY: 0
     });
@@ -482,6 +488,12 @@ function setupEvents() {
 let raycaster = new THREE.Raycaster();
 
 function handleCanvasClick(e) {
+  // On mobile, if a card is currently zoomed in, any click on canvas closes it
+  if (isMobile && zoomedCardIndex !== -1) {
+    closeZoom();
+    return;
+  }
+  
   // Raycast from camera to click location
   const rect = renderer.domElement.getBoundingClientRect();
   const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -527,11 +539,17 @@ function handleCanvasClick(e) {
     const scaleVal = 1.0 + (CONFIG.focusScale - 1.0) * focusFactor;
     const zVal = focusFactor * 0.4;
     
-    // Calculate xOffset using the 3rd-order odd polynomial mapping
-    const yNorm = cy / yEdge;
-    const cardWidthRatio = (card.width * scaleVal) / visibleWidth;
-    const maxCenterOffset = visibleWidth * (0.20 - cardWidthRatio / 2.0);
-    const xPath = maxCenterOffset * (Math.pow(yNorm, 3) - 0.75 * yNorm) / 0.25;
+    // Calculate xOffset using the mobile/desktop custom paths
+    let xPath;
+    if (isMobile) {
+      const yNorm = cy / yEdge;
+      xPath = visibleWidth * (0.6 * Math.pow(yNorm, 2) + 0.15 * yNorm - 0.45);
+    } else {
+      const yNorm = cy / yEdge;
+      const cardWidthRatio = (card.width * scaleVal) / visibleWidth;
+      const maxCenterOffset = visibleWidth * (0.20 - cardWidthRatio / 2.0);
+      xPath = maxCenterOffset * (Math.pow(yNorm, 3) - 0.75 * yNorm) / 0.25;
+    }
     
     // Center point in world space
     const cx_val = xPath;
@@ -571,8 +589,12 @@ function handleCanvasClick(e) {
   });
   
   if (closestCard) {
-    const src = closestCard.mesh.material.uniforms.uTexture.value.image.src;
-    openLightbox(src);
+    if (isMobile) {
+      openZoom(closestCard.uniqueIndex);
+    } else {
+      const src = closestCard.mesh.material.uniforms.uTexture.value.image.src;
+      openLightbox(src);
+    }
   }
 }
 
@@ -594,9 +616,70 @@ function closeLightbox() {
   }
 }
 
+// --- MOBILE 3D INLINE ZOOM FUNCTIONS ---
+function openZoom(index) {
+  const card = cardMeshes.find(c => c.uniqueIndex === index);
+  if (!card) return;
+  
+  zoomedCardIndex = index;
+  
+  // Set focus UI immediately to the clicked card
+  activeFocusedIndex = cardMeshes.indexOf(card);
+  updateFocusUI(card);
+  
+  gsap.killTweensOf(card);
+  gsap.killTweensOf(zoomedCardProgress);
+  
+  // Interpolate zoomProgress to 1.0
+  gsap.to(card, {
+    zoomProgress: 1.0,
+    duration: 0.65,
+    ease: "power2.out"
+  });
+  
+  // Fade out other cards in parallel by animating zoomedCardProgress.value to 1.0
+  gsap.to(zoomedCardProgress, {
+    value: 1.0,
+    duration: 0.5,
+    ease: "power2.out"
+  });
+}
+
+function closeZoom() {
+  if (zoomedCardIndex === -1) return;
+  
+  const card = cardMeshes.find(c => c.uniqueIndex === zoomedCardIndex);
+  if (!card) return;
+  
+  gsap.killTweensOf(card);
+  gsap.killTweensOf(zoomedCardProgress);
+  
+  // Interpolate zoomProgress back to 0.0
+  gsap.to(card, {
+    zoomProgress: 0.0,
+    duration: 0.65,
+    ease: "power2.inOut",
+    onComplete: () => {
+      zoomedCardIndex = -1;
+    }
+  });
+  
+  // Fade in other cards by animating zoomedCardProgress.value back to 0.0
+  gsap.to(zoomedCardProgress, {
+    value: 0.0,
+    duration: 0.5,
+    ease: "power2.inOut"
+  });
+}
+
 // --- SCROLL INPUT HANDLER ---
 function handleScroll() {
   const currentScrollY = window.scrollY;
+  
+  if (isMobile && zoomedCardIndex !== -1) {
+    window.scrollTo(0, lastScrollY);
+    return;
+  }
   
   if (isWarping) {
     lastScrollY = currentScrollY;
@@ -651,6 +734,7 @@ function checkScrollWrap() {
 
 // --- MOBILE TOUCH SWIPING HANDLERS ---
 function handleTouchStart(e) {
+  if (isMobile && zoomedCardIndex !== -1) return;
   // Only handle single touch dragging
   if (e.touches.length === 1) {
     isDraggingMobile = true;
@@ -664,7 +748,9 @@ function handleTouchStart(e) {
   }
 }
 
+// --- MOBILE TOUCH SWIPING HANDLERS ---
 function handleTouchMove(e) {
+  if (isMobile && zoomedCardIndex !== -1) return;
   if (isDraggingMobile && e.touches.length === 1) {
     const currentY = e.touches[0].clientY;
     const deltaY = currentY - lastTouchY;
@@ -687,6 +773,7 @@ function handleTouchMove(e) {
 }
 
 function handleTouchEnd(e) {
+  if (isMobile && zoomedCardIndex !== -1) return;
   isDraggingMobile = false;
   
   // Apply deceleration momentum on swipe release
@@ -1024,25 +1111,76 @@ function animate() {
     const velocityBlur = Math.min(0.55, Math.abs(scrollVelocity) * 20.0);
     const blurVal = Math.max(depthBlur, edgeBlur, velocityBlur);
     
-    // Calculate xOffset using the 3rd-order odd polynomial mapping with 30%-70% boundary clamps
+    // Calculate xOffset using the 3rd-order odd polynomial mapping with 30%-70% boundary clamps (desktop) or curved axis (mobile)
     const yNorm = y / yEdge;
-    // Dynamically calculate maxCenterOffset so card edges align exactly at 30% and 70% of screen width
-    const cardWidthRatio = (card.width * scaleVal) / visibleWidth;
-    const maxCenterOffset = visibleWidth * (0.20 - cardWidthRatio / 2.0);
-    const xPath = maxCenterOffset * (Math.pow(yNorm, 3) - 0.75 * yNorm) / 0.25;
+    let xPath;
+    if (isMobile) {
+      xPath = visibleWidth * (0.6 * Math.pow(yNorm, 2) + 0.15 * yNorm - 0.45);
+    } else {
+      // Dynamically calculate maxCenterOffset so card edges align exactly at 30% and 70% of screen width
+      const cardWidthRatio = (card.width * scaleVal) / visibleWidth;
+      const maxCenterOffset = visibleWidth * (0.20 - cardWidthRatio / 2.0);
+      xPath = maxCenterOffset * (Math.pow(yNorm, 3) - 0.75 * yNorm) / 0.25;
+    }
     const xOffset = xPath + radius * Math.sin(wrappedTheta);
+    
+    // Calculate final interpolated zoom properties
+    const zoom = card.zoomProgress || 0.0;
+    
+    let finalTheta = wrappedTheta;
+    let finalY = y;
+    let finalZ = zVal;
+    let finalXOffset = xOffset;
+    let finalBend = bendVal;
+    let finalScale = scaleVal;
+    let finalOpacity = opacityVal;
+    let finalBrightness = brightVal;
+    let finalBlur = blurVal;
+    
+    if (isMobile && zoom > 0.0) {
+      const targetTheta = 0.0;
+      const targetY = 0.0;
+      const targetZ = 4.8;
+      const targetXOffset = 0.0;
+      const targetBend = 0.0; // flat plane
+      
+      const distToCam = cameraZ - targetZ;
+      const visH = 2.0 * distToCam * Math.tan((CONFIG.fov / 2.0) * Math.PI / 180.0);
+      const visW = visH * camera.aspect;
+      const scaleToFitH = (visH * 0.88) / card.height;
+      const scaleToFitW = (visW * 0.88) / card.width;
+      const targetScale = Math.min(scaleToFitH, scaleToFitW);
+      
+      finalTheta = THREE.MathUtils.lerp(wrappedTheta, targetTheta, zoom);
+      finalY = THREE.MathUtils.lerp(y, targetY, zoom);
+      finalZ = THREE.MathUtils.lerp(zVal, targetZ, zoom);
+      finalXOffset = THREE.MathUtils.lerp(xOffset, targetXOffset, zoom);
+      finalBend = THREE.MathUtils.lerp(bendVal, targetBend, zoom);
+      finalScale = THREE.MathUtils.lerp(scaleVal, targetScale, zoom);
+      
+      finalOpacity = THREE.MathUtils.lerp(opacityVal, 1.0, zoom);
+      finalBrightness = THREE.MathUtils.lerp(brightVal, 1.0, zoom);
+      finalBlur = THREE.MathUtils.lerp(blurVal, 0.0, zoom);
+    }
+    
+    // Apply opacity fade out for other cards when zoomed
+    if (isMobile && zoomedCardIndex !== -1) {
+      if (card.uniqueIndex !== zoomedCardIndex) {
+        finalOpacity *= (1.0 - zoomedCardProgress.value * 0.9); // fade down others to 10%
+      }
+    }
     
     // 5. Update Uniform values
     const uniforms = card.mesh.material.uniforms;
-    uniforms.uThetaC.value = wrappedTheta;
-    uniforms.uYC.value = y;
-    uniforms.uZC.value = zVal;
-    uniforms.uXOffset.value = xOffset;
-    uniforms.uBendFactor.value = bendVal;
-    uniforms.uScale.value = scaleVal;
-    uniforms.uOpacity.value = opacityVal;
-    uniforms.uBrightness.value = brightVal;
-    uniforms.uBlur.value = blurVal;
+    uniforms.uThetaC.value = finalTheta;
+    uniforms.uYC.value = finalY;
+    uniforms.uZC.value = finalZ;
+    uniforms.uXOffset.value = finalXOffset;
+    uniforms.uBendFactor.value = finalBend;
+    uniforms.uScale.value = finalScale;
+    uniforms.uOpacity.value = finalOpacity;
+    uniforms.uBrightness.value = finalBrightness;
+    uniforms.uBlur.value = finalBlur;
     
     // 6. Local Interactive Tilt Easing (on mouse hover)
     // Only apply mouse-tilt to the focused card on Desktop
@@ -1056,7 +1194,7 @@ function animate() {
     
     // Mobile roll-deck rotation around X-axis for extra depth
     if (isMobile) {
-      targetTiltX = -y * 0.08;
+      targetTiltX = THREE.MathUtils.lerp(-y * 0.08, 0.0, zoom);
     }
     
     card.tiltX += (targetTiltX - card.tiltX) * 0.08;
