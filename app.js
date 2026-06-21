@@ -742,9 +742,6 @@ function handleTouchStart(e) {
     lastTouchY = touchStartY;
     touchStartTime = performance.now();
     touchVelocity = 0;
-    
-    // Prevent default screen bounce scrolling
-    if (e.cancelable) e.preventDefault();
   }
 }
 
@@ -758,7 +755,7 @@ function handleTouchMove(e) {
     
     // Touch drag sensitivity multiplier
     const sensitivity = 0.0016;
-    targetScrollAngle -= deltaY * sensitivity;
+    targetScrollAngle += deltaY * sensitivity; // Fix touch scroll direction inversion
     
     // Track swipe speed for physics momentum
     const now = performance.now();
@@ -782,12 +779,13 @@ function handleTouchEnd(e) {
     const dir = touchVelocity > 0 ? 1 : -1;
     // Math: final swipe inertia added directly to scroll target
     const momentum = Math.min(2.5, absVelocity * 15.0) * dir;
-    targetScrollAngle += momentum * 0.55;
+    targetScrollAngle -= momentum * 0.55; // Fix momentum direction inversion
     
     // Shift auto drift direction based on user kinetic swipe direction
     driftDirection = dir > 0 ? -1 : 1;
   }
 }
+
 
 // --- MOUSE TRACKING ---
 function handleMouseMove(e) {
