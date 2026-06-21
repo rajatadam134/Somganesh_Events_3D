@@ -484,6 +484,37 @@ function setupEvents() {
   });
 }
 
+// --- MOBILE HELIX PATH EVALUATOR ---
+function getHelixX(yUser) {
+  // Clamp yUser to the defined range of the spline
+  const y = Math.max(25.0, Math.min(85.0, yUser));
+  if (y <= 30.0) {
+    const dy = y - 25.0;
+    return -0.01740605 * dy * dy * dy + 0.00000000 * dy * dy + -9.56484874 * dy + 100.00000000;
+  } else if (y <= 35.0) {
+    const dy = y - 30.0;
+    return 0.08703025 * dy * dy * dy + -0.26109076 * dy * dy + -10.87030252 * dy + 50.00000000;
+  } else if (y <= 40.0) {
+    const dy = y - 35.0;
+    return -0.01071496 * dy * dy * dy + 1.04436303 * dy * dy + -6.95394116 * dy + 0.00000000;
+  } else if (y <= 50.0) {
+    const dy = y - 40.0;
+    return -0.05522454 * dy * dy * dy + 0.88363864 * dy * dy + 2.68606718 * dy + -10.00000000;
+  } else if (y <= 65.0) {
+    const dy = y - 50.0;
+    return 0.03765177 * dy * dy * dy + -0.77309743 * dy * dy + 3.79147925 * dy + 50.00000000;
+  } else if (y <= 75.0) {
+    const dy = y - 65.0;
+    return -0.10225826 * dy * dy * dy + 0.92123235 * dy * dy + 6.01350300 * dy + 60.00000000;
+  } else if (y <= 80.0) {
+    const dy = y - 75.0;
+    return 0.19887630 * dy * dy * dy + -2.14651560 * dy * dy + -6.23932950 * dy + 110.00000000;
+  } else {
+    const dy = y - 80.0;
+    return -0.05577526 * dy * dy * dy + 0.83662890 * dy * dy + -12.78876300 * dy + 50.00000000;
+  }
+}
+
 // --- LIGHTBOX INTERACTION ---
 let raycaster = new THREE.Raycaster();
 
@@ -540,24 +571,28 @@ function handleCanvasClick(e) {
     const zVal = focusFactor * 0.4;
     
     // Calculate xOffset using the mobile/desktop custom paths
-    let xPath;
+    let xPath, thetaVal;
     if (isMobile) {
       const yNorm = cy / yEdge;
-      xPath = visibleWidth * (0.6 * Math.pow(yNorm, 2) + 0.15 * yNorm - 0.45);
+      const yUser = 50.0 - 50.0 * yNorm;
+      const xUser = getHelixX(yUser);
+      xPath = ((xUser - 50.0) / 100.0) * visibleWidth;
+      thetaVal = 1.5 * Math.PI + Math.PI * (yUser - 40.0) / 35.0;
     } else {
       const yNorm = cy / yEdge;
       const cardWidthRatio = (card.width * scaleVal) / visibleWidth;
       const maxCenterOffset = visibleWidth * (0.20 - cardWidthRatio / 2.0);
       xPath = maxCenterOffset * (Math.pow(yNorm, 3) - 0.75 * yNorm) / 0.25;
+      thetaVal = wrappedTheta;
     }
     
     // Center point in world space
-    const cx_val = isMobile ? xPath - radius * Math.sin(wrappedTheta) : xPath;
-    const cz_val = zVal + radius * cosTheta;
+    const cx_val = xPath;
+    const cz_val = zVal + radius * Math.cos(thetaVal);
     const C = new THREE.Vector3(cx_val, cy, cz_val);
     
     // Normal vector at the center of the card
-    const N = new THREE.Vector3(-Math.sin(wrappedTheta), 0, Math.cos(wrappedTheta));
+    const N = new THREE.Vector3(-Math.sin(thetaVal), 0, Math.cos(thetaVal));
     
     // Define the card's flat tangent plane
     const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(N, C);
@@ -1064,6 +1099,18 @@ function animate() {
     // Deduce wrapped angle corresponding to wrapped position
     const wrappedTheta = y / pitchFactor;
     
+    // Compute thetaVal and xPath based on device mode
+    let thetaVal, xPath;
+    const yNorm = y / yEdge;
+    if (isMobile) {
+      const yUser = 50.0 - 50.0 * yNorm;
+      const xUser = getHelixX(yUser);
+      xPath = ((xUser - 50.0) / 100.0) * visibleWidth;
+      thetaVal = 1.5 * Math.PI + Math.PI * (yUser - 40.0) / 35.0;
+    } else {
+      thetaVal = wrappedTheta;
+    }
+    
     // Save wrapped vertical position on object for query
     card.yWrapped = y;
     
@@ -1093,7 +1140,7 @@ function animate() {
     let opacityVal = CONFIG.unfocusedOpacity + (1.0 - CONFIG.unfocusedOpacity) * focusFactor;
     
     // Fade out at the back of the cylinder to prevent wrapping pop
-    const cosTheta = Math.cos(wrappedTheta);
+    const cosTheta = Math.cos(thetaVal);
     const fadeFactor = THREE.MathUtils.smoothstep(cosTheta, -0.85, -0.5);
     opacityVal *= fadeFactor;
     
@@ -1109,23 +1156,19 @@ function animate() {
     const velocityBlur = Math.min(0.55, Math.abs(scrollVelocity) * 20.0);
     const blurVal = Math.max(depthBlur, edgeBlur, velocityBlur);
     
-    // Calculate xOffset using the 3rd-order odd polynomial mapping with 30%-70% boundary clamps (desktop) or curved axis (mobile)
-    const yNorm = y / yEdge;
-    let xPath;
-    if (isMobile) {
-      xPath = visibleWidth * (0.6 * Math.pow(yNorm, 2) + 0.15 * yNorm - 0.45);
-    } else {
+    // Calculate xOffset using the 3rd-order odd polynomial mapping with 30%-70% boundary clamps (desktop) or spline path (mobile)
+    if (!isMobile) {
       // Dynamically calculate maxCenterOffset so card edges align exactly at 30% and 70% of screen width
       const cardWidthRatio = (card.width * scaleVal) / visibleWidth;
       const maxCenterOffset = visibleWidth * (0.20 - cardWidthRatio / 2.0);
       xPath = maxCenterOffset * (Math.pow(yNorm, 3) - 0.75 * yNorm) / 0.25;
     }
-    const xOffset = isMobile ? xPath : xPath + radius * Math.sin(wrappedTheta);
+    const xOffset = xPath + radius * Math.sin(thetaVal);
     
     // Calculate final interpolated zoom properties
     const zoom = card.zoomProgress || 0.0;
     
-    let finalTheta = wrappedTheta;
+    let finalTheta = thetaVal;
     let finalY = y;
     let finalZ = zVal;
     let finalXOffset = xOffset;
@@ -1150,7 +1193,7 @@ function animate() {
       const scaleToFitW = (visW * 0.88) / card.width;
       const targetScale = Math.min(scaleToFitH, scaleToFitW);
       
-      finalTheta = THREE.MathUtils.lerp(wrappedTheta, targetTheta, zoom);
+      finalTheta = THREE.MathUtils.lerp(thetaVal, targetTheta, zoom);
       finalY = THREE.MathUtils.lerp(y, targetY, zoom);
       finalZ = THREE.MathUtils.lerp(zVal, targetZC, zoom); // Lerp to corrected ZC coordinate
       finalXOffset = THREE.MathUtils.lerp(xOffset, targetXOffset, zoom);
