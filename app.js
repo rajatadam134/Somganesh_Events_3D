@@ -31,9 +31,9 @@ const CONFIG = {
   
   // Mobile Settings
   mobile: {
-    radius: 1.8,            // Expanded mobile radius
-    verticalSpacing: 0.70,  // Packing spacing on mobile
-    bendSpread: 0.8,
+    radius: 2.6,            // Expanded mobile radius to make cards larger and readable
+    verticalSpacing: 0.85,  // Spacing to match larger card sizes
+    bendSpread: 1.0,
     cameraZ: 7.2,
   }
 };
@@ -691,13 +691,13 @@ function handleScroll() {
   lastScrollY = currentScrollY;
   
   if (deltaY !== 0) {
-    targetScrollAngle -= deltaY * CONFIG.scrollSensitivity;
+    targetScrollAngle += deltaY * CONFIG.scrollSensitivity;
     
     // Set drift direction based on user scrolling (downwards vs upwards)
     if (deltaY > 0) {
-      driftDirection = -1; // scroll down -> cards move up -> drift moves up
+      driftDirection = 1;  // scroll down -> cards move down -> drift moves down
     } else if (deltaY < 0) {
-      driftDirection = 1;  // scroll up -> cards move down -> drift moves down
+      driftDirection = -1; // scroll up -> cards move up -> drift moves up
     }
   }
   
@@ -755,7 +755,7 @@ function handleTouchMove(e) {
     
     // Touch drag sensitivity multiplier
     const sensitivity = 0.0016;
-    targetScrollAngle += deltaY * sensitivity; // Fix touch scroll direction inversion
+    targetScrollAngle -= deltaY * sensitivity; // Reverse touch scroll direction
     
     // Track swipe speed for physics momentum
     const now = performance.now();
@@ -779,10 +779,10 @@ function handleTouchEnd(e) {
     const dir = touchVelocity > 0 ? 1 : -1;
     // Math: final swipe inertia added directly to scroll target
     const momentum = Math.min(2.5, absVelocity * 15.0) * dir;
-    targetScrollAngle -= momentum * 0.55; // Fix momentum direction inversion
+    targetScrollAngle += momentum * 0.55; // Reverse momentum direction
     
     // Shift auto drift direction based on user kinetic swipe direction
-    driftDirection = dir > 0 ? -1 : 1;
+    driftDirection = dir > 0 ? 1 : -1; // Reverse drift direction
   }
 }
 
