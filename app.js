@@ -925,19 +925,23 @@ function animate() {
     particlesPoints.geometry.attributes.position.needsUpdate = true;
   }
   
-  // 2. Cursor Trailer Easing
-  const cursor = document.getElementById('custom-cursor');
-  const dot = document.getElementById('cursor-dot');
-  
-  const currentLeft = parseFloat(cursor.style.left) || 0;
-  const currentTop = parseFloat(cursor.style.top) || 0;
-  cursor.style.left = `${currentLeft + (mouse.targetX - currentLeft) * 0.15}px`;
-  cursor.style.top = `${currentTop + (mouse.targetY - currentTop) * 0.15}px`;
-  
-  const currentDotLeft = parseFloat(dot.style.left) || 0;
-  const currentDotTop = parseFloat(dot.style.top) || 0;
-  dot.style.left = `${currentDotLeft + (mouse.targetX - currentDotLeft) * 0.3}px`;
-  dot.style.top = `${currentDotTop + (mouse.targetY - currentDotTop) * 0.3}px`;
+  // 2. Cursor Trailer Easing (skip on mobile)
+  if (!isMobile) {
+    const cursor = document.getElementById('custom-cursor');
+    const dot = document.getElementById('cursor-dot');
+    
+    if (cursor && dot) {
+      const currentLeft = parseFloat(cursor.style.left) || 0;
+      const currentTop = parseFloat(cursor.style.top) || 0;
+      cursor.style.left = `${currentLeft + (mouse.targetX - currentLeft) * 0.15}px`;
+      cursor.style.top = `${currentTop + (mouse.targetY - currentTop) * 0.15}px`;
+      
+      const currentDotLeft = parseFloat(dot.style.left) || 0;
+      const currentDotTop = parseFloat(dot.style.top) || 0;
+      dot.style.left = `${currentDotLeft + (mouse.targetX - currentDotLeft) * 0.3}px`;
+      dot.style.top = `${currentDotTop + (mouse.targetY - currentDotTop) * 0.3}px`;
+    }
+  }
   
   // 3. Layout Cards along the Helix
   const N = cardMeshes.length;
@@ -1077,32 +1081,6 @@ function updateFocusUI(card) {
   // Update slide counter in footer
   const slideNumEl = document.getElementById('current-slide');
   if (slideNumEl) slideNumEl.innerText = String(card.baseIndex + 1).padStart(2, '0');
-  
-  // Update floating mobile details card with smooth GSAP slide-fade transitions
-  const mobilePanel = document.getElementById('mobile-focus-panel');
-  const mobTitle = document.getElementById('mobile-title');
-  const mobCategory = document.getElementById('mobile-category');
-  
-  if (mobilePanel && mobTitle && mobCategory) {
-    gsap.killTweensOf([mobTitle, mobCategory]);
-    
-    // Quick fade and slide up out of view, swap text, slide up into view
-    gsap.to([mobTitle, mobCategory], {
-      opacity: 0,
-      y: -8,
-      duration: 0.12,
-      ease: "power1.out",
-      onComplete: () => {
-        mobTitle.innerText = card.title;
-        mobCategory.innerText = card.category;
-        
-        gsap.fromTo([mobTitle, mobCategory], 
-          { y: 8, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.25, ease: "power2.out", stagger: 0.04 }
-        );
-      }
-    });
-  }
   
   // Haptic feedback pulse on mobile devices when locking in focus
   if (isMobile && navigator.vibrate) {

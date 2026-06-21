@@ -1301,52 +1301,58 @@ a.info-value:hover {
   transform: rotate(90deg);
 }
 
-/* Floating Mobile Focus Panel (Glassmorphic details card) */
-.mobile-focus-panel {
-  position: fixed;
-  bottom: 110px; /* Sits elegantly above footer count and scroll indicators */
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 50;
-  display: none; /* Hide on desktop by default */
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.85); /* Solid premium translucent white background */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 30px;
-  padding: 14px 28px;
-  width: calc(100vw - 60px);
-  max-width: 340px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 15px rgba(212, 175, 87, 0.2);
-  pointer-events: none; /* Let touches pass through to WebGL canvas below */
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.mobile-focus-category {
-  font-family: var(--font-sans);
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.25em;
-  color: #888888;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.mobile-focus-title {
-  font-family: var(--font-serif);
-  font-size: 1.15rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #000000;
-  font-weight: 500;
-  line-height: 1.2;
-}
-
+/* Mobile Experience Polish & Overrides */
 @media (max-width: 768px) {
-  .mobile-focus-panel {
-    display: flex; /* Expose only on mobile screens */
+  /* Hide custom cursor on mobile */
+  .custom-cursor,
+  .cursor-dot {
+    display: none !important;
+  }
+  
+  /* Add breathing room below header buttons */
+  .menu-panel {
+    padding: 85px 25px 25px 25px !important;
+  }
+  
+  /* Evenly space out About scroll content to resolve empty bottom space */
+  #panel-about .panel-scroll-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  #panel-about .panel-scroll-content .panel-desc {
+    margin-bottom: 0;
+  }
+  
+  /* Keep description connected to title and balance gaps in Contact */
+  #panel-contact .contact-content-body {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    margin-top: 15px !important;
+    margin-bottom: 10px;
+    flex-grow: 0 !important;
+    justify-content: flex-start !important;
+  }
+  
+  /* Disable stuck hover effects on mobile touch screens */
+  .menu-link-item:hover {
+    padding-left: 0 !important;
+  }
+  .menu-link-item:hover::before {
+    opacity: 0 !important;
+    transform: translateY(-50%) scale(0) !important;
+  }
+  
+  /* Prevent email text from spilling out on narrow viewports */
+  .menu-footer-email {
+    font-size: 0.85rem !important;
+    max-width: 100%;
+  }
+  
+  /* Tighten menu list margins to prevent footer overflow */
+  .menu-links-container {
+    margin-top: 20px !important;
+    gap: 12px !important;
   }
 }
