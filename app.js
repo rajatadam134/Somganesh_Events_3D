@@ -1139,6 +1139,7 @@ function animate() {
       const targetTheta = 0.0;
       const targetY = 0.0;
       const targetZ = 4.8;
+      const targetZC = targetZ - radius; // Correct for Z-rendering offset: uZC + uRadius in vertex shader
       const targetXOffset = 0.0;
       const targetBend = 0.0; // flat plane
       
@@ -1151,7 +1152,7 @@ function animate() {
       
       finalTheta = THREE.MathUtils.lerp(wrappedTheta, targetTheta, zoom);
       finalY = THREE.MathUtils.lerp(y, targetY, zoom);
-      finalZ = THREE.MathUtils.lerp(zVal, targetZ, zoom);
+      finalZ = THREE.MathUtils.lerp(zVal, targetZC, zoom); // Lerp to corrected ZC coordinate
       finalXOffset = THREE.MathUtils.lerp(xOffset, targetXOffset, zoom);
       finalBend = THREE.MathUtils.lerp(bendVal, targetBend, zoom);
       finalScale = THREE.MathUtils.lerp(scaleVal, targetScale, zoom);
