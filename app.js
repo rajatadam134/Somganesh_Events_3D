@@ -31,8 +31,8 @@ const CONFIG = {
   
   // Mobile Settings
   mobile: {
-    radius: 2.6,            // Expanded mobile radius to make cards larger and readable
-    verticalSpacing: 0.85,  // Spacing to match larger card sizes
+    radius: 2.2,            // Ideal mobile radius for a visible 3D spiral structure
+    verticalSpacing: 0.80,  // Packing spacing to match card size
     bendSpread: 1.0,
     cameraZ: 7.2,
   }
@@ -552,7 +552,7 @@ function handleCanvasClick(e) {
     }
     
     // Center point in world space
-    const cx_val = xPath;
+    const cx_val = isMobile ? xPath - radius * Math.sin(wrappedTheta) : xPath;
     const cz_val = zVal + radius * cosTheta;
     const C = new THREE.Vector3(cx_val, cy, cz_val);
     
@@ -831,7 +831,7 @@ function updateCardDimensions() {
   const deltaTheta = (2.0 * Math.PI) / 16.0;
   
   // Safe limits to prevent overlap in both directions (95% size, 5% gap)
-  const horizontalLimit = radius * deltaTheta * 0.95;
+  const horizontalLimit = isMobile ? radius * deltaTheta * 1.8 : radius * deltaTheta * 0.95;
   const verticalLimit = spacing * 0.95;
   
   // Re-create plane geometries with aspect ratios preserved (no stretch or crop)
@@ -1120,7 +1120,7 @@ function animate() {
       const maxCenterOffset = visibleWidth * (0.20 - cardWidthRatio / 2.0);
       xPath = maxCenterOffset * (Math.pow(yNorm, 3) - 0.75 * yNorm) / 0.25;
     }
-    const xOffset = xPath + radius * Math.sin(wrappedTheta);
+    const xOffset = isMobile ? xPath : xPath + radius * Math.sin(wrappedTheta);
     
     // Calculate final interpolated zoom properties
     const zoom = card.zoomProgress || 0.0;
