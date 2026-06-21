@@ -575,6 +575,9 @@ function handleCanvasClick(e) {
     if (isMobile) {
       const yNorm = cy / yEdge;
       const yUser = 50.0 - 50.0 * yNorm;
+      if (yUser < 25.0 || yUser > 85.0) {
+        return; // Skip click target check for invisible cards outside the path
+      }
       const xUser = getHelixX(yUser);
       xPath = ((xUser - 50.0) / 100.0) * visibleWidth;
       thetaVal = 1.5 * Math.PI + Math.PI * (yUser - 40.0) / 35.0;
@@ -1102,8 +1105,8 @@ function animate() {
     // Compute thetaVal and xPath based on device mode
     let thetaVal, xPath;
     const yNorm = y / yEdge;
+    const yUser = 50.0 - 50.0 * yNorm;
     if (isMobile) {
-      const yUser = 50.0 - 50.0 * yNorm;
       const xUser = getHelixX(yUser);
       xPath = ((xUser - 50.0) / 100.0) * visibleWidth;
       thetaVal = 1.5 * Math.PI + Math.PI * (yUser - 40.0) / 35.0;
@@ -1143,6 +1146,19 @@ function animate() {
     const cosTheta = Math.cos(thetaVal);
     const fadeFactor = THREE.MathUtils.smoothstep(cosTheta, -0.85, -0.5);
     opacityVal *= fadeFactor;
+    
+    // Mobile boundary fade-out to prevent clamping stack-up overlap
+    if (isMobile) {
+      let pathFade = 1.0;
+      if (yUser < 25.0 || yUser > 85.0) {
+        pathFade = 0.0;
+      } else if (yUser < 29.0) {
+        pathFade = (yUser - 25.0) / 4.0;
+      } else if (yUser > 81.0) {
+        pathFade = (85.0 - yUser) / 4.0;
+      }
+      opacityVal *= pathFade;
+    }
     
     // Brightness highlight
     const brightVal = 1.0 + (CONFIG.focusBrightness - 1.0) * focusFactor;
