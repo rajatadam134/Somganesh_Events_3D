@@ -1,0 +1,5 @@
+# Ignore backup files
+app_backup_*.js
+
+# Ignore duplicate assets folder
+assets/

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Somganesh Events | Immersive Event Design & Decor</title>
+  <meta name="description" content="Somganesh Events is a luxury event design and decoration firm specializing in creating bespoke, immersive environments for weddings, corporate galas, and intimate celebrations.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Custom Cursor / Mouse Trailer -->
+  <div class="custom-cursor" id="custom-cursor"></div>
+  <div class="cursor-dot" id="cursor-dot"></div>
+
+  <!-- Background Grid Pattern (Original commented out for testing Pacome's background) -->
+  <!-- <div class="bg-grid"></div> -->
+  <!-- <div class="bg-vignette"></div> -->
+
+  <!-- SVG Background from pacomepertant.com (for testing) -->
+  <svg class="pacome-bg" width="1920" height="1200" viewBox="0 0 1920 1200" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g clip-path="url(#clip0_792_154)">
+      <rect width="1920" height="1200" fill="url(#pattern0_792_154)" fill-opacity="0.2"></rect>
+      <g filter="url(#filter0_f_792_154)">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M2442 1526H-522V-326H2442V1526ZM960 14C453.003 14 42 276.585 42 600.5C42 924.415 453.003 1187 960 1187C1467 1187 1878 924.415 1878 600.5C1878 276.585 1467 14 960 14Z" fill="#0A0A0A"></path>
+      </g>
+    </g>
+    <defs>
+      <filter id="filter0_f_792_154" x="-1022" y="-826" width="3964" height="2852" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+        <feFlood flood-opacity="0" result="BackgroundImageFix"></feFlood>
+        <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"></feBlend>
+        <feGaussianBlur stdDeviation="250" result="effect1_foregroundBlur_792_154"></feGaussianBlur>
+      </filter>
+      <clipPath id="clip0_792_154">
+        <rect width="1920" height="1200" fill="white"></rect>
+      </clipPath>
+      <pattern id="pattern0_792_154" patternUnits="userSpaceOnUse" patternTransform="matrix(50 0 0 50 934.75 574.75)" preserveAspectRatio="none" viewBox="-0.5 -0.5 100 100" width="1" height="1">
+        <use xlink:href="#pattern0_792_154_inner" transform="translate(-100 -100)"></use>
+        <use xlink:href="#pattern0_792_154_inner" transform="translate(0 -100)"></use>
+        <use xlink:href="#pattern0_792_154_inner" transform="translate(-100 0)"></use>
+        <g id="pattern0_792_154_inner">
+          <rect width="100" height="100" stroke="white"></rect>
+        </g>
+      </pattern>
+    </defs>
+  </svg>
+
+  <!-- Main Canvas Container for Three.js -->
+  <div id="canvas-container"></div>
+
+  <!-- Subtle Editorial Side Columns (Visible on Desktop) -->
+  <div class="side-content left-side">
+    <span class="side-label">Philosophy</span>
+    <p class="side-text">Sculpting space and light to transform empty venues into bespoke, immersive realms of memory.</p>
+  </div>
+
+  <div class="side-content right-side">
+    <span class="side-label">Curation</span>
+    <p class="side-text">Obsessive details, custom botanical installations, and bespoke production for luxury celebrations.</p>
+  </div>
+
+  <!-- Site Layout / Header & UI -->
+  <div class="ui-wrapper">
+    <header class="main-header">
+      <div class="logo-group">
+        <div class="brand-info">
+          <h1 class="brand-name">Somganesh<br><span class="brand-subname">Events</span></h1>
+        </div>
+      </div>
+      
+      <!-- Pacome-style Expanding Menu Drawer Container -->
+      <nav class="menu-container" id="menu-container">
+        <!-- Drawer Morphing Background Card -->
+        <div class="menu-drawer-bg" id="menu-drawer-bg"></div>
+
+        <!-- Triggers Wrapper -->
+        <div class="menu-trigger-wrapper">
+          <button class="menu-btn" id="menu-btn" aria-expanded="false">
+            <div class="menu-btn-text">
+              <span class="letter">m</span>
+              <span class="letter">e</span>
+              <span class="letter">n</span>
+              <span class="letter">u</span>
+            </div>
+          </button>
+          <button class="menu-close-btn" id="menu-close-btn" aria-label="Close menu">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9.73089 1.08866C9.82464 1.1824 9.82464 1.3344 9.73089 1.42815L6.42822 4.73082C6.33447 4.82457 6.33447 4.97656 6.42822 5.07031L9.73089 8.37298C9.82464 8.46673 9.82464 8.61872 9.73089 8.71247L8.71254 9.73082C8.61879 9.82457 8.4668 9.82457 8.37305 9.73082L5.07038 6.42815C4.97663 6.3344 4.82464 6.3344 4.73089 6.42815L1.42822 9.73082C1.33447 9.82457 1.18248 9.82457 1.08873 9.73082L0.0703827 8.71247C-0.0233666 8.61872 -0.0233664 8.46673 0.0703828 8.37298L3.37305 5.07031C3.4668 4.97656 3.4668 4.82457 3.37305 4.73082L0.0703828 1.42815C-0.0233664 1.3344 -0.0233664 1.1824 0.0703828 1.08866L1.08873 0.0703119C1.18248 -0.0234374 1.33447 -0.0234373 1.42822 0.070312L4.73089 3.37298C4.82464 3.46673 4.97663 3.46673 5.07038 3.37298L8.37305 0.070312C8.4668 -0.0234372 8.61879 -0.0234372 8.71254 0.070312L9.73089 1.08866Z" fill="currentColor"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Drawer Content Wrapper -->
+        <div class="menu-drawer-content" id="menu-drawer-content">
+          <div class="menu-panels-wrapper">
+            
+            <!-- Panel 1: Menu Links -->
+            <div class="menu-panel active" id="panel-menu">
+              <div class="menu-links-container">
+                <div class="menu-link-item">
+                  <a href="#" id="menu-link-work"><span>works</span></a>
+                </div>
+                <div class="menu-link-item">
+                  <a href="#" id="menu-link-about"><span>about</span></a>
+                </div>
+                <div class="menu-link-item">
+                  <a href="#" id="menu-link-contact"><span>contact</span></a>
+                </div>
+              </div>
+              
+              <div class="menu-drawer-footer">
+                <a href="mailto:Battulganesh03@gmail.com" class="menu-footer-email">Battulganesh03@gmail.com</a>
+                <div class="menu-footer-socials">
+                  <a href="https://www.instagram.com/somganeshevents" target="_blank" rel="noopener noreferrer" class="menu-social-link" aria-label="Instagram">
+                    <svg class="menu-social-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                  </a>
+                  <a href="https://wa.me/918983908135" target="_blank" rel="noopener noreferrer" class="menu-social-link" aria-label="WhatsApp">
+                    <svg class="menu-social-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.005 5.277 5.282 0 11.768 0c3.141.001 6.094 1.22 8.313 3.434 2.218 2.216 3.44 5.166 3.44 8.307-.005 6.486-5.283 11.76-11.77 11.76-2.005-.001-3.973-.513-5.724-1.488L0 24zm6.59-4.846c1.62.963 3.208 1.47 4.978 1.471 5.378 0 9.752-4.352 9.757-9.7 0-2.593-1.01-5.032-2.845-6.865-1.837-1.836-4.279-2.847-6.87-2.848-5.385 0-9.758 4.354-9.763 9.702-.001 1.892.493 3.738 1.433 5.388L2.244 21.14l4.403-1.986zm10.793-6.52c-.297-.15-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Panel 2: About Content -->
+            <div class="menu-panel" id="panel-about">
+              <button class="menu-back-btn" id="about-back-btn" aria-label="Go back">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+              </button>
+              
+              <div class="panel-scroll-content">
+                <h2 class="panel-title">about us</h2>
+                <p class="panel-desc">Somganesh Events is a premier event design and curation firm focusing on crafting unforgettable luxury celebrations.</p>
+                <p class="panel-desc">Our approach blends cinematic scenography with meticulous logistical coordination to bring extraordinary visions to life.</p>
+                
+                <h3 class="panel-subtitle">Our Expertise</h3>
+                <ul class="panel-services-list">
+                  <li>Signature Event Curation</li>
+                  <li>Venue Transformation</li>
+                  <li>Royal Weddings & Vivah</li>
+                  <li>Divine Deity Decor</li>
+                  <li>Milestone Celebrations</li>
+                  <li>Scenic Stage Design</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Panel 3: Contact Content -->
+            <div class="menu-panel" id="panel-contact">
+              <button class="menu-back-btn" id="contact-back-btn" aria-label="Go back">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+              </button>
+              
+              <div class="panel-scroll-content">
+                <h2 class="panel-title">contact</h2>
+                <div class="contact-content-body">
+                  <p class="panel-desc">We would love to design your next luxury experience. Reach out directly through any of our channels below or connect with us instantly.</p>
+                  
+                  <div class="panel-info-block">
+                    <div class="panel-info-row">
+                      <span class="info-label">Email</span>
+                      <a href="mailto:Battulganesh03@gmail.com" class="info-value">Battulganesh03@gmail.com</a>
+                    </div>
+                    <div class="panel-info-row">
+                      <span class="info-label">Phone / WhatsApp</span>
+                      <a href="tel:+918983908135" class="info-value">+91 8983908135</a>
+                    </div>
+                    <div class="panel-info-row">
+                      <span class="info-label">Location</span>
+                      <span class="info-value">Solapur, Maharashtra, India</span>
+                    </div>
+                  </div>
+                  
+                  <div class="contact-cta-buttons">
+                    <!-- WhatsApp Button -->
+                    <a href="https://wa.me/918983908135" target="_blank" rel="noopener noreferrer" class="whatsapp-direct-btn">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.005 5.277 5.282 0 11.768 0c3.141.001 6.094 1.22 8.313 3.434 2.218 2.216 3.44 5.166 3.44 8.307-.005 6.486-5.283 11.76-11.77 11.76-2.005-.001-3.973-.513-5.724-1.488L0 24zm6.59-4.846c1.62.963 3.208 1.47 4.978 1.471 5.378 0 9.752-4.352 9.757-9.7 0-2.593-1.01-5.032-2.845-6.865-1.837-1.836-4.279-2.847-6.87-2.848-5.385 0-9.758 4.354-9.763 9.702-.001 1.892.493 3.738 1.433 5.388L2.244 21.14l4.403-1.986zm10.793-6.52c-.297-.15-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                      </svg>
+                      <span>Chat on WhatsApp</span>
+                    </a>
+                    
+                    <!-- Instagram Button -->
+                    <a href="https://www.instagram.com/somganeshevents" target="_blank" rel="noopener noreferrer" class="instagram-direct-btn">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                      </svg>
+                      <span>Follow on Instagram</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </nav>
+    </header>
+
+
+
+    <!-- Bottom Left/Right UI overlays -->
+    <footer class="main-footer">
+      <div class="scroll-helper">
+        <span class="scroll-text">Scroll to explore</span>
+        <div class="scroll-indicator">
+          <div class="scroll-dot"></div>
+        </div>
+      </div>
+      <div class="gallery-counter">
+        <span class="current-slide" id="current-slide">01</span>
+        <span class="divider">/</span>
+        <span class="total-slides" id="total-slides">09</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modals completely removed to integrate About & Contact directly into the drawer panel theme -->
+
+  <!-- Scroll container that determines scroll height -->
+  <div id="scroll-container">
+    <div class="scroll-spacer"></div>
+  </div>
+
+  <!-- Floating Mobile Focus Panel -->
+  <div class="mobile-focus-panel" id="mobile-focus-panel">
+    <span class="mobile-focus-category" id="mobile-category">Grand Entrance</span>
+    <h3 class="mobile-focus-title" id="mobile-title">Floral Symphony</h3>
+  </div>
+
+  <!-- Lightbox Overlay for Fullscreen View -->
+  <div class="lightbox-overlay" id="lightbox-overlay">
+    <button class="lightbox-close" id="lightbox-close" aria-label="Close lightbox">&times;</button>
+    <div class="lightbox-container">
+      <img src="" alt="Event Detail" id="lightbox-img">
+    </div>
+  </div>
+
+  <!-- WebGL / UI Logic and CDN Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="app.js?v=1.2"></script>
+</body>
+</html>

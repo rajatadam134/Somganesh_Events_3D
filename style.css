@@ -1,0 +1,1352 @@
+/* Core Design System & Stylesheet for Somganesh Events */
+
+:root {
+  --bg-color: #050505;
+  --card-bg: rgba(10, 10, 10, 0.75);
+  --accent-color: #D4AF37;       /* Luxury Gold/Champagne */
+  --accent-color-rgb: 212, 175, 87;
+  --text-main: #FFFFFF;
+  --text-muted: #888888;
+  --text-dark: #333333;
+  --font-serif: 'Cinzel', serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: all 0.2s ease;
+}
+
+/* Reset & Global styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-color) #0c0c0c;
+}
+
+/* Custom Scrollbar for Webkit */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #080808;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 3px;
+  transition: var(--transition-fast);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.6);
+}
+
+/* Background Grid & Vignette */
+/* Background Grid & Vignette (Original commented out to test Pacome's background)
+.bg-grid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: -2;
+  background-image: 
+    radial-gradient(rgba(212, 175, 55, 0.06) 1.5px, transparent 1.5px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.005) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.005) 1px, transparent 1px);
+  background-size: 50px 50px, 150px 150px, 150px 150px;
+  background-position: center center;
+}
+
+.bg-vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(circle at center, transparent 20%, rgba(5, 5, 5, 0.9) 100%);
+}
+*/
+
+/* Background SVG from pacomepertant.com */
+.pacome-bg {
+  height: 100%;
+  left: 0;
+  object-fit: cover;
+  opacity: 0.25; /* Sleek, elegant grid overlay */
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: -1;
+}
+
+/* Custom Cursor */
+.custom-cursor {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(var(--accent-color-rgb), 0.3);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease, border-color 0.3s ease;
+  mix-blend-mode: difference;
+}
+
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent-color);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+}
+
+/* Hover effects for cursor */
+.custom-cursor.hover {
+  width: 70px;
+  height: 70px;
+  border-color: rgba(var(--accent-color-rgb), 0.8);
+  background-color: rgba(var(--accent-color-rgb), 0.05);
+}
+
+.custom-cursor.hidden {
+  opacity: 0;
+}
+
+/* Three.js Canvas Container */
+#canvas-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: auto;
+}
+
+/* UI Layout Wrapper */
+.ui-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none; /* Let clicks pass through to Three.js canvas */
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px 60px;
+}
+
+/* Header styling */
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  pointer-events: auto; /* Enable interaction for logo/nav */
+}
+
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.brand-logo {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  opacity: 0.95;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-name {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 500;
+  line-height: 1.15;
+  background: linear-gradient(135deg, #FFF 60%, var(--accent-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.brand-subname {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.45em;
+  font-weight: 400;
+  -webkit-text-fill-color: var(--accent-color);
+  display: inline-block;
+  margin-top: 4px;
+  opacity: 0.85;
+}
+
+/* Subtle Editorial Side Columns */
+.side-content {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 5;
+  pointer-events: none; /* Let clicks pass to canvas */
+  transition: var(--transition-smooth);
+}
+
+.left-side {
+  left: 45px;
+  text-align: left;
+}
+
+.right-side {
+  right: 45px;
+  text-align: right;
+  align-items: flex-end;
+}
+
+.side-label {
+  font-family: var(--font-serif);
+  font-size: 0.7rem;
+  letter-spacing: 0.35em;
+  color: var(--accent-color);
+  text-transform: uppercase;
+  opacity: 0.55;
+  display: block;
+}
+
+.side-text {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  opacity: 0.45;
+}
+
+/* Pacome-style Expanding Menu Drawer */
+.menu-container {
+  position: fixed;
+  top: 40px;
+  right: 60px;
+  width: 120px; /* Explicit closed width so text doesn't overflow */
+  height: 48px; /* Explicit closed height */
+  z-index: 100;
+  pointer-events: none; /* Let clicks pass to canvas unless over buttons/drawer */
+  transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1), height 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.menu-container.opened {
+  width: 400px;
+  height: calc(100vh - 80px); /* 40px top and bottom margin */
+  pointer-events: auto; /* Enable interaction for active drawer */
+}
+
+@media (max-width: 768px) {
+  .menu-container {
+    top: 25px;
+    right: 30px;
+    width: 110px;
+  }
+  .menu-container.opened {
+    width: calc(100vw - 60px);
+    height: calc(100vh - 50px);
+  }
+}
+
+/* Morphing Drawer Background Card */
+.menu-drawer-bg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #111111; /* Dark luxury pill background */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  z-index: 15;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  transition: background-color 0.9s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.9s ease, border 0.9s ease, box-shadow 0.9s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.menu-container.opened .menu-drawer-bg {
+  background-color: #ffffff; /* Solid white drawer */
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Menu Trigger Wrapper */
+.menu-trigger-wrapper {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 48px;
+  pointer-events: none;
+  z-index: 30;
+}
+
+/* Closed State Button */
+.menu-btn {
+  background: none;
+  border: none;
+  width: 100%;
+  height: 100%;
+  color: #ffffff; /* White text to contrast with dark canvas */
+  font-family: var(--font-sans);
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-transform: lowercase;
+  outline: none;
+  position: relative;
+  pointer-events: auto;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.menu-btn::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent-color); /* Gold dot */
+  border-radius: 50%;
+}
+
+.menu-btn-text {
+  display: flex;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.menu-container.opened .menu-btn-text {
+  opacity: 0;
+  transform: translate(5px);
+  pointer-events: none;
+}
+
+.menu-container.opened .menu-btn {
+  pointer-events: none;
+  cursor: default;
+  opacity: 0;
+}
+
+/* Close Button (Black circle scaling/rotating in) */
+.menu-close-btn {
+  background-color: #000000;
+  border: none;
+  border-radius: 50%;
+  height: 48px;
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  cursor: pointer;
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  z-index: 30;
+  outline: none;
+  transform-origin: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.125);
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
+}
+
+.menu-close-btn svg {
+  color: #ffffff;
+  transition: transform 0.5s ease, opacity 0.3s ease;
+  transform: rotate(-45deg);
+  opacity: 0;
+}
+
+/* close text styles removed */
+
+.menu-container.opened .menu-close-btn {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.menu-container.opened .menu-close-btn svg {
+  opacity: 1;
+  transform: rotate(0deg);
+}
+
+/* close text opened animation removed */
+
+/* Drawer Content Wrapper */
+.menu-drawer-content {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  box-sizing: border-box;
+}
+
+.menu-container.opened .menu-drawer-content {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 0.3s;
+}
+
+/* Panels System inside Drawer */
+.menu-panels-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.menu-panel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 80px 40px 40px 40px;
+  box-sizing: border-box;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(30px);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.menu-panel.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+@media (max-width: 768px) {
+  .menu-panel {
+    padding: 70px 25px 25px 25px;
+  }
+}
+
+/* Back Button for Sub-panels (Symmetric Black Circle with White Arrow) */
+.menu-back-btn {
+  background-color: #000000;
+  border: none;
+  border-radius: 50%;
+  height: 48px;
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  cursor: pointer;
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  z-index: 30;
+  outline: none;
+  padding: 0;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
+}
+
+.menu-back-btn:hover {
+  transform: scale(1.05);
+  background-color: #222222;
+}
+
+.menu-back-btn svg {
+  color: #ffffff;
+  transition: transform 0.3s ease;
+}
+
+.menu-back-btn:hover svg {
+  transform: translateX(-2px);
+}
+
+/* Scrollable Panel content */
+.panel-scroll-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: none; /* Hide scrollbars */
+  padding-right: 5px;
+  margin-bottom: 10px;
+}
+
+.panel-scroll-content::-webkit-scrollbar {
+  display: none;
+}
+
+.panel-title {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: #000000;
+  margin-bottom: 10px;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+}
+
+.panel-desc {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #333333;
+  margin-bottom: 10px;
+}
+
+.panel-subtitle {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  color: #000000;
+  margin-top: 10px;
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+/* Services list inside about panel */
+.panel-services-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.panel-services-list li {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: #444444;
+  position: relative;
+  padding-left: 18px;
+}
+
+.panel-services-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--accent-color);
+  font-weight: bold;
+}
+
+/* Contact Info rows */
+.panel-info-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.panel-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#panel-contact .panel-info-row {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding-bottom: 12px;
+}
+
+#panel-contact .panel-info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.panel-info-row .info-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #888888;
+  font-weight: 600;
+}
+
+.panel-info-row .info-value {
+  font-size: 1rem;
+  color: #000000;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a.panel-info-row .info-value:hover,
+a.info-value:hover {
+  color: var(--accent-color);
+}
+
+/* Contact content body vertical distribution */
+#panel-contact .contact-content-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-grow: 1;
+  gap: 20px;
+  margin: auto 0;
+}
+
+/* Direct WhatsApp CTA Button */
+.whatsapp-direct-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: #25D366;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 14px 24px;
+  border-radius: 50px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+}
+
+.whatsapp-direct-btn:hover {
+  background-color: #20ba5a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+}
+
+/* Contact CTA buttons container */
+.contact-cta-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+  width: 100%;
+}
+
+/* Instagram Gradient CTA Button */
+.instagram-direct-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: #ffffff;
+  text-decoration: none;
+  padding: 14px 24px;
+  border-radius: 50px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+  box-shadow: 0 4px 15px rgba(220, 39, 67, 0.25);
+}
+
+.instagram-direct-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 39, 67, 0.35);
+  filter: brightness(1.05);
+}
+
+.instagram-direct-btn svg {
+  stroke: currentColor;
+  fill: none;
+}
+
+/* Navigation Links inside Drawer Panel 1 */
+.menu-links-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 40px;
+}
+
+.menu-link-item {
+  position: relative;
+  cursor: pointer;
+  font-size: 4rem; /* Large and bold lowercase */
+  font-weight: 500;
+  font-family: var(--font-sans);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  width: fit-content;
+  transition: padding-left 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 768px) {
+  .menu-link-item {
+    font-size: 2.8rem;
+  }
+}
+
+.menu-link-item a {
+  text-decoration: none;
+  color: #000000;
+  display: block;
+}
+
+.menu-link-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  width: 14px;
+  height: 14px;
+  background-color: #000000;
+  border-radius: 50%;
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.menu-link-item:hover {
+  padding-left: 28px;
+}
+
+.menu-link-item:hover::before {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* Drawer Footer styling */
+.menu-drawer-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 30px;
+}
+
+@media (max-width: 768px) {
+  .menu-drawer-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+}
+
+.menu-footer-email {
+  color: #000000;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-footer-email:hover {
+  opacity: 1;
+}
+
+.menu-footer-socials {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.menu-social-link {
+  color: #000000;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.menu-social-link:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.menu-social-icon {
+  stroke: #000000;
+}
+
+/* Center Focus Viewfinder Overlay */
+.center-focus-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 450px;
+  pointer-events: none;
+  z-index: 5;
+  transition: var(--transition-smooth);
+}
+
+.focus-line-top, .focus-line-bottom {
+  width: 100px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--accent-color), transparent);
+  transition: var(--transition-smooth);
+  opacity: 0.4;
+}
+
+.focus-details {
+  margin: 25px 0;
+  opacity: 0;
+  transform: translateY(15px);
+  /* Transition removed: opacity & transform are driven dynamically by the JS tick loop */
+}
+
+.focus-category {
+  font-size: 0.7rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--accent-color);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.focus-title {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-main);
+  text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+}
+
+/* Footer / Scrolling Helper & Counter */
+.main-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.scroll-helper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.scroll-text {
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.scroll-indicator {
+  width: 2px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  border-radius: 1px;
+}
+
+.scroll-dot {
+  width: 2px;
+  height: 15px;
+  background-color: var(--accent-color);
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 1px;
+  animation: scrollAnim 2s cubic-bezier(0.65, 0.05, 0.36, 1) infinite;
+}
+
+@keyframes scrollAnim {
+  0% { top: -15px; }
+  50% { top: 40px; }
+  100% { top: 40px; }
+}
+
+.gallery-counter {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  letter-spacing: 0.15em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.current-slide {
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+.divider {
+  color: var(--text-dark);
+}
+
+.total-slides {
+  color: var(--text-muted);
+}
+
+/* Slide-in Modals */
+.modal {
+  position: fixed;
+  top: 0;
+  right: -100%; /* Hidden off-screen right */
+  width: 50%;
+  height: 100%;
+  background: var(--card-bg);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-left: 1px solid rgba(212, 175, 55, 0.15);
+  box-shadow: -15px 0 30px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  padding: 80px 60px;
+  display: flex;
+  align-items: center;
+  transition: right 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal.active {
+  right: 0;
+}
+
+.modal-close {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 2rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.modal-close:hover {
+  color: var(--accent-color);
+  transform: rotate(90deg);
+}
+
+.modal-content {
+  display: flex;
+  gap: 50px;
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  padding-right: 15px;
+  scrollbar-width: none; /* Hide scrollbar inside modal content */
+}
+
+.modal-content::-webkit-scrollbar {
+  display: none;
+}
+
+.modal-left {
+  flex: 1.2;
+}
+
+.modal-right {
+  flex: 0.8;
+}
+
+.modal-subtitle {
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  color: var(--accent-color);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.modal-title {
+  font-family: var(--font-serif);
+  font-size: 2.4rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  line-spacing: 1.2;
+  margin-bottom: 30px;
+}
+
+.modal-text p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+
+/* Columns/Cards inside Modal Right */
+.vision-card, .contact-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 30px;
+  border-radius: 4px;
+}
+
+.vision-card h3, .contact-card h3 {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  color: var(--accent-color);
+}
+
+.vision-card ul {
+  list-style: none;
+}
+
+.vision-card li {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 15px;
+}
+
+.vision-card li strong {
+  color: var(--text-main);
+  display: block;
+  margin-bottom: 3px;
+}
+
+/* Contact form fields */
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  margin-top: 10px;
+}
+
+.form-group {
+  position: relative;
+  width: 100%;
+}
+
+.form-group input, .form-group textarea {
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  color: var(--text-main);
+  padding: 10px 0;
+  font-size: 0.9rem;
+  outline: none;
+  transition: var(--transition-fast);
+}
+
+.form-group input:focus, .form-group textarea:focus {
+  border-bottom-color: var(--accent-color);
+}
+
+.form-group label {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  color: var(--text-muted);
+  pointer-events: none;
+  font-size: 0.9rem;
+  transition: var(--transition-fast);
+}
+
+/* Floating label effect */
+.form-group input:focus ~ label,
+.form-group input:not(:placeholder-shown) ~ label,
+.form-group textarea:focus ~ label,
+.form-group textarea:not(:placeholder-shown) ~ label {
+  top: -12px;
+  font-size: 0.75rem;
+  color: var(--accent-color);
+}
+
+.submit-btn {
+  background: none;
+  border: 1px solid var(--accent-color);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  padding: 15px 30px;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: var(--transition-smooth);
+  border-radius: 2px;
+}
+
+.submit-btn:hover {
+  background-color: var(--accent-color);
+  color: #000;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
+}
+
+/* Contact info card */
+.contact-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.social-links {
+  display: flex;
+  gap: 20px;
+  margin-top: 30px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 25px;
+}
+
+.social-link {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  transition: var(--transition-fast);
+}
+
+.social-link:hover {
+  color: var(--accent-color);
+}
+
+/* Scroll spacer in document flow to allow native scrolling */
+#scroll-container {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none; /* Let clicks pass to header and canvas */
+  z-index: 1;
+}
+
+.scroll-spacer {
+  width: 100%;
+  height: 40000px; /* Tall height to support seamless infinite scrollbar warping */
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .modal {
+    width: 70%;
+  }
+  .side-content {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Layout adjustments */
+  .ui-wrapper {
+    padding: 25px 30px;
+  }
+  
+  .brand-logo {
+    height: 38px;
+  }
+
+  .brand-name {
+    font-size: 1.1rem;
+  }
+
+  .brand-tagline {
+    font-size: 0.55rem;
+  }
+
+  .main-nav ul {
+    gap: 20px;
+  }
+
+  .nav-link {
+    font-size: 0.7rem;
+  }
+
+  .center-focus-overlay {
+    width: 280px;
+  }
+
+  .focus-title {
+    font-size: 1.5rem;
+  }
+
+  .modal {
+    width: 100%;
+    padding: 80px 30px;
+  }
+
+  .modal-content {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .modal-title {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+  }
+
+  /* Height override removed to keep infinite warp math consistent */
+}
+
+/* Lightbox Overlay */
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(5, 5, 5, 0.95);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lightbox-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lightbox-container {
+  max-width: 90%;
+  max-height: 90%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lightbox-container img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  transform: scale(0.9);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lightbox-overlay.active img {
+  transform: scale(1);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 40px;
+  right: 40px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 2.5rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.lightbox-close:hover {
+  color: var(--accent-color);
+  transform: rotate(90deg);
+}
+
+/* Floating Mobile Focus Panel (Glassmorphic details card) */
+.mobile-focus-panel {
+  position: fixed;
+  bottom: 110px; /* Sits elegantly above footer count and scroll indicators */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: none; /* Hide on desktop by default */
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.85); /* Solid premium translucent white background */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 30px;
+  padding: 14px 28px;
+  width: calc(100vw - 60px);
+  max-width: 340px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 15px rgba(212, 175, 87, 0.2);
+  pointer-events: none; /* Let touches pass through to WebGL canvas below */
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.mobile-focus-category {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: #888888;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.mobile-focus-title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #000000;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+@media (max-width: 768px) {
+  .mobile-focus-panel {
+    display: flex; /* Expose only on mobile screens */
+  }
+}
