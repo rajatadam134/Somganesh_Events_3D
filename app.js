@@ -469,8 +469,8 @@ function setupEvents() {
   const lightboxOverlay = document.getElementById('lightbox-overlay');
   if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
   if (lightboxOverlay) {
-    lightboxOverlay.addEventListener('click', (e) => {
-      if (e.target === lightboxOverlay) closeLightbox();
+    lightboxOverlay.addEventListener('click', () => {
+      closeLightbox();
     });
   }
   
