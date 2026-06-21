@@ -273,12 +273,12 @@ html, body {
 @media (max-width: 768px) {
   .menu-container {
     top: 25px;
-    right: 30px;
+    right: 25px;
     width: 110px;
   }
   .menu-container.opened {
-    width: calc(100vw - 60px);
-    height: calc(100vh - 50px);
+    width: calc(100vw - 50px);
+    height: calc(100svh - 50px);
   }
 }
 
@@ -1322,6 +1322,16 @@ a.info-value:hover {
   }
   #panel-about .panel-scroll-content .panel-desc {
     margin-bottom: 0;
+    font-size: 1.05rem !important;
+    line-height: 1.65 !important;
+  }
+  #panel-about .panel-subtitle {
+    font-size: 1.3rem !important;
+    margin-top: 15px !important;
+  }
+  #panel-about .panel-services-list li {
+    font-size: 1.05rem !important;
+    padding-left: 20px !important;
   }
   
   /* Keep description connected to title and balance gaps in Contact */
@@ -1333,6 +1343,33 @@ a.info-value:hover {
     margin-bottom: 10px;
     flex-grow: 0 !important;
     justify-content: flex-start !important;
+  }
+  
+  #panel-contact .panel-info-block {
+    gap: 18px !important;
+  }
+  
+  #panel-contact .panel-info-row {
+    padding-bottom: 14px !important;
+  }
+  
+  #panel-contact .panel-info-row .info-label {
+    font-size: 0.8rem !important;
+  }
+  
+  #panel-contact .panel-info-row .info-value {
+    font-size: 1.1rem !important;
+  }
+  
+  #panel-contact .contact-cta-buttons {
+    gap: 14px !important;
+    margin-top: 15px !important;
+  }
+  
+  #panel-contact .whatsapp-direct-btn,
+  #panel-contact .instagram-direct-btn {
+    padding: 16px 24px !important;
+    font-size: 1rem !important;
   }
   
   /* Disable stuck hover effects on mobile touch screens */
