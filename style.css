@@ -1262,8 +1262,8 @@ a.info-value:hover {
 }
 
 .lightbox-container {
-  max-width: 90%;
-  max-height: 90%;
+  max-width: 75vw;
+  max-height: 75vh;
   display: flex;
   justify-content: center;
   align-items: center;
