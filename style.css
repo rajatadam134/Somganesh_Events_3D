@@ -124,7 +124,7 @@ html, body {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   z-index: 0;
   pointer-events: auto;
 }
@@ -135,7 +135,7 @@ html, body {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   pointer-events: none; /* Let clicks pass through to Three.js canvas */
   z-index: 10;
   display: flex;
@@ -1232,7 +1232,7 @@ a.info-value:hover {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   background-color: rgba(5, 5, 5, 0.95);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
