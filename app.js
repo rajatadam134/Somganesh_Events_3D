@@ -51,19 +51,18 @@ const CONFIG = {
     },
     mobile: {
       minWidth: 0,
-      radius: 2.2,
-      pitch: 0.75,
-      cardsPerTurn: 12,
-      cameraZ: 7.2,
-      fov: 45,
-      cardWidthScale: 1.8,
-      cardHeightScale: 0.95,
-      scrollSensitivity: 0.0009,
-      dragSensitivity: 0.0020,
-      touchMomentumMultiplier: 0.55,
+      radiusX: 2.4,          // Elliptical helix horizontal radius
+      radiusZ: 1.8,          // Elliptical helix depth radius
+      pitch: 0.60,           // Vertical spacing (pitch)
+      cardsPerTurn: 8.5,     // Angular spacing parameter (approx. 8.5 cards per 360 degrees)
+      cameraZ: 5.6,          // Distance of camera
+      fov: 50,               // Mobile FOV
+      cardWidthScale: 0.70,  // Occupies 70% of screen width
+      dragSensitivity: 0.0022,
+      touchMomentumMultiplier: 0.75,
       lerpSpeed: 0.09,
       dprCap: 1.5,
-      bendSpread: 1.0
+      bendSpread: 1.3
     }
   }
 };
@@ -193,7 +192,8 @@ const fragmentShader = `
   uniform float uOpacity;
   uniform float uBrightness;
   uniform float uBlur; // 0.0 = clear, 1.0 = maximum blur
-  uniform float uAspect; // Aspect ratio of the card
+  uniform float uAspect; // Aspect ratio of the card geometry (width / height)
+  uniform float uImageAspect; // Aspect ratio of the original image (width / height)
   varying vec2 vUv;
 
   float roundedRectDist(vec2 p, vec2 b, float r) {
@@ -204,12 +204,25 @@ const fragmentShader = `
   void main() {
     vec2 uv = vUv;
     
+    // Cover-style UV cropping to fit original texture into clamped card aspect ratio
+    if (uImageAspect > 0.0 && uAspect > 0.0) {
+      if (uImageAspect > uAspect) {
+        // Image is wider than card geometry -> scale horizontally
+        float scaleX = uAspect / uImageAspect;
+        uv.x = (uv.x - 0.5) * scaleX + 0.5;
+      } else {
+        // Image is taller than card geometry -> scale vertically
+        float scaleY = uImageAspect / uAspect;
+        uv.y = (uv.y - 0.5) * scaleY + 0.5;
+      }
+    }
+
     // Apply rounded corners mask in local coordinate space
     vec2 p = uv - vec2(0.5);
     vec2 size = vec2(uAspect, 1.0);
     vec2 localCoord = p * size;
     vec2 b = size * 0.5;
-    float r = 0.06; // Corner radius (adjust for curvature depth)
+    float r = 0.06; // Corner radius
     
     float dist = roundedRectDist(localCoord, b, r);
     float edgeAlpha = 1.0 - smoothstep(-0.004, 0.004, dist);
@@ -265,12 +278,16 @@ let lastScrollY = 0;
 let isWarping = false;
 let driftDirection = 1; // 1 = down, -1 = up
 
-// Mobile Drag & Momentum Physics
-let touchStartY = 0;
-let touchStartTime = 0;
-let touchVelocity = 0;
-let isDraggingMobile = false;
-let lastTouchY = 0;
+// Mobile Drag & Momentum Physics (Virtual Helix Controller)
+let mobileScrollAngle = 0;
+let mobileScrollVelocity = 0;
+let mobileIsDragging = false;
+let mobileLastTouchY = 0;
+let mobileLastTouchTime = 0;
+let mobileDragStartX = 0;
+let mobileDragStartY = 0;
+let mobileIdleTime = 0;
+
 let scrollVelocity = 0;
 let lastScrollAngle = 0;
 
@@ -467,7 +484,8 @@ function buildGallery(loadedCards) {
         uOpacity: { value: CONFIG.unfocusedOpacity },
         uBrightness: { value: 1.0 },
         uBlur: { value: 0.0 },
-        uAspect: { value: cardData.aspect }
+        uAspect: { value: cardData.aspect },
+        uImageAspect: { value: cardData.aspect }
       },
       transparent: true,
       depthWrite: true, // Enabled for pixel-perfect 3D depth-buffer sorting
@@ -498,6 +516,12 @@ function buildGallery(loadedCards) {
   recalculateLayout();
 }
 
+let resizeTimeout;
+function debouncedRecalculateLayout() {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(recalculateLayout, 100);
+}
+
 // --- EVENTS BINDING ---
 function setupEvents() {
   window.addEventListener('scroll', handleScroll, { passive: true });
@@ -506,19 +530,19 @@ function setupEvents() {
   const canvasContainer = document.getElementById('canvas-container');
   if (canvasContainer) {
     const resizeObserver = new ResizeObserver(() => {
-      recalculateLayout();
+      debouncedRecalculateLayout();
     });
     resizeObserver.observe(canvasContainer);
   }
   
   // Use visualViewport if available to prevent mobile layout jumps
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', recalculateLayout);
+    window.visualViewport.addEventListener('resize', debouncedRecalculateLayout);
   }
   
   // Handle orientation change
   window.addEventListener('orientationchange', () => {
-    setTimeout(recalculateLayout, 100);
+    debouncedRecalculateLayout();
   });
   
   // Mouse Cursor tracking
@@ -531,10 +555,12 @@ function setupEvents() {
   const container = document.getElementById('canvas-container');
   container.addEventListener('click', handleCanvasClick);
   
-  // Touch swiping dragging listeners on mobile canvas
-  container.addEventListener('touchstart', handleTouchStart, { passive: false });
-  container.addEventListener('touchmove', handleTouchMove, { passive: false });
-  container.addEventListener('touchend', handleTouchEnd, { passive: true });
+  // Pointer events for mobile gallery drag, swiping, and virtual interaction
+  container.addEventListener('pointerdown', handlePointerDown);
+  container.addEventListener('pointermove', handlePointerMove, { passive: false });
+  container.addEventListener('pointerup', handlePointerUp);
+  container.addEventListener('pointercancel', handlePointerCancel);
+  container.addEventListener('wheel', handleMobileWheel, { passive: false });
   
   // Lightbox Close triggers
   const lightboxClose = document.getElementById('lightbox-close');
@@ -556,46 +582,11 @@ function setupEvents() {
   });
 }
 
-// --- MOBILE HELIX PATH EVALUATOR ---
-function getHelixX(yUser) {
-  // Clamp yUser to the defined range of the spline
-  const y = Math.max(25.0, Math.min(85.0, yUser));
-  if (y <= 30.0) {
-    const dy = y - 25.0;
-    return -0.01740605 * dy * dy * dy + 0.00000000 * dy * dy + -9.56484874 * dy + 100.00000000;
-  } else if (y <= 35.0) {
-    const dy = y - 30.0;
-    return 0.08703025 * dy * dy * dy + -0.26109076 * dy * dy + -10.87030252 * dy + 50.00000000;
-  } else if (y <= 40.0) {
-    const dy = y - 35.0;
-    return -0.01071496 * dy * dy * dy + 1.04436303 * dy * dy + -6.95394116 * dy + 0.00000000;
-  } else if (y <= 50.0) {
-    const dy = y - 40.0;
-    return -0.05522454 * dy * dy * dy + 0.88363864 * dy * dy + 2.68606718 * dy + -10.00000000;
-  } else if (y <= 65.0) {
-    const dy = y - 50.0;
-    return 0.03765177 * dy * dy * dy + -0.77309743 * dy * dy + 3.79147925 * dy + 50.00000000;
-  } else if (y <= 75.0) {
-    const dy = y - 65.0;
-    return -0.10225826 * dy * dy * dy + 0.92123235 * dy * dy + 6.01350300 * dy + 60.00000000;
-  } else if (y <= 80.0) {
-    const dy = y - 75.0;
-    return 0.19887630 * dy * dy * dy + -2.14651560 * dy * dy + -6.23932950 * dy + 110.00000000;
-  } else {
-    const dy = y - 80.0;
-    return -0.05577526 * dy * dy * dy + 0.83662890 * dy * dy + -12.78876300 * dy + 50.00000000;
-  }
-}
-
 // --- LIGHTBOX INTERACTION ---
 let raycaster = new THREE.Raycaster();
 
 function handleCanvasClick(e) {
-  // On mobile, if a card is currently zoomed in, any click on canvas closes it
-  if (isMobile && zoomedCardIndex !== -1) {
-    closeZoom();
-    return;
-  }
+  if (isMobile) return;
   
   // Raycast from camera to click location
   const rect = renderer.domElement.getBoundingClientRect();
@@ -642,24 +633,11 @@ function handleCanvasClick(e) {
     const scaleVal = 1.0 + (CONFIG.focusScale - 1.0) * focusFactor;
     const zVal = focusFactor * 0.4;
     
-    // Calculate xOffset using the mobile/desktop custom paths
-    let xPath, thetaVal;
-    if (isMobile) {
-      const yNorm = cy / yEdge;
-      const yUser = 50.0 - 50.0 * yNorm;
-      if (yUser < 25.0 || yUser > 85.0) {
-        return; // Skip click target check for invisible cards outside the path
-      }
-      const xUser = getHelixX(yUser);
-      xPath = ((xUser - 50.0) / 100.0) * visibleWidth;
-      thetaVal = 1.5 * Math.PI + Math.PI * (yUser - 40.0) / 35.0;
-    } else {
-      const yNorm = cy / yEdge;
-      const cardWidthRatio = (card.width * scaleVal) / visibleWidth;
-      const maxCenterOffset = visibleWidth * (0.20 - cardWidthRatio / 2.0);
-      xPath = maxCenterOffset * (Math.pow(yNorm, 3) - 0.75 * yNorm) / 0.25;
-      thetaVal = wrappedTheta;
-    }
+    const yNorm = cy / yEdge;
+    const cardWidthRatio = (card.width * scaleVal) / visibleWidth;
+    const maxCenterOffset = visibleWidth * (0.20 - cardWidthRatio / 2.0);
+    const xPath = maxCenterOffset * (Math.pow(yNorm, 3) - 0.75 * yNorm) / 0.25;
+    const thetaVal = wrappedTheta;
     
     // Center point in world space
     const cx_val = xPath;
@@ -699,12 +677,8 @@ function handleCanvasClick(e) {
   });
   
   if (closestCard) {
-    if (isMobile) {
-      openZoom(closestCard.uniqueIndex);
-    } else {
-      const src = closestCard.mesh.material.uniforms.uTexture.value.image.src;
-      openLightbox(src);
-    }
+    const src = closestCard.mesh.material.uniforms.uTexture.value.image.src;
+    openLightbox(src);
   }
 }
 
@@ -835,57 +809,192 @@ function checkScrollWrap() {
   }
 }
 
-// --- MOBILE TOUCH SWIPING HANDLERS ---
-function handleTouchStart(e) {
-  if (isMobile && zoomedCardIndex !== -1) return;
-  // Only handle single touch dragging
-  if (e.touches.length === 1) {
-    isDraggingMobile = true;
-    touchStartY = e.touches[0].clientY;
-    lastTouchY = touchStartY;
-    touchStartTime = performance.now();
-    touchVelocity = 0;
+// --- MOBILE POINTER & WHEEL DRAGGING HANDLERS ---
+function handlePointerDown(e) {
+  if (!isMobile) return;
+  if (zoomedCardIndex !== -1) {
+    closeZoom();
+    return;
   }
+  
+  mobileIsDragging = true;
+  mobileLastTouchY = e.clientY;
+  mobileLastTouchTime = performance.now();
+  mobileScrollVelocity = 0;
+  mobileIdleTime = 0;
+  
+  // Track start coords to differentiate tap vs swipe
+  mobileDragStartX = e.clientX;
+  mobileDragStartY = e.clientY;
+  
+  try {
+    e.target.setPointerCapture(e.pointerId);
+  } catch (err) {}
 }
 
-// --- MOBILE TOUCH SWIPING HANDLERS ---
-function handleTouchMove(e) {
-  if (isMobile && zoomedCardIndex !== -1) return;
-  if (isDraggingMobile && e.touches.length === 1) {
-    const currentY = e.touches[0].clientY;
-    const deltaY = currentY - lastTouchY;
-    lastTouchY = currentY;
+function handlePointerMove(e) {
+  if (!isMobile || !mobileIsDragging) return;
+  
+  const currentY = e.clientY;
+  const deltaY = currentY - mobileLastTouchY;
+  mobileLastTouchY = currentY;
+  
+  const bp = CONFIG.breakpoints.mobile;
+  const scrollDelta = -deltaY * bp.dragSensitivity;
+  mobileScrollAngle += scrollDelta;
+  
+  const now = performance.now();
+  const dt = now - mobileLastTouchTime;
+  if (dt > 0) {
+    mobileScrollVelocity = scrollDelta / (dt / 1000.0);
+    mobileLastTouchTime = now;
+  }
+  mobileIdleTime = 0;
+  
+  if (e.cancelable) e.preventDefault();
+}
+
+function handlePointerUp(e) {
+  if (!isMobile || !mobileIsDragging) return;
+  mobileIsDragging = false;
+  
+  try {
+    e.target.releasePointerCapture(e.pointerId);
+  } catch (err) {}
+  
+  const dragDistX = Math.abs(e.clientX - mobileDragStartX);
+  const dragDistY = Math.abs(e.clientY - mobileDragStartY);
+  const totalDragDist = Math.sqrt(dragDistX * dragDistX + dragDistY * dragDistY);
+  
+  if (totalDragDist < 6) {
+    handleMobileTap(e.clientX, e.clientY);
+  } else {
+    const maxVelocity = 15.0; // clamp to prevent infinite spin
+    mobileScrollVelocity = Math.max(-maxVelocity, Math.min(maxVelocity, mobileScrollVelocity));
     
-    // We pass -deltaY because dragging up (negative deltaY) moves scroll forward (positive scrollDelta)
-    applyScrollDelta(-deltaY, true);
-    
-    // Track swipe speed for physics momentum
-    const now = performance.now();
-    const timeDelta = now - touchStartTime;
-    if (timeDelta > 0) {
-      touchVelocity = -deltaY / timeDelta;
-      touchStartTime = now;
+    if (mobileScrollVelocity > 0) {
+      driftDirection = 1;
+    } else if (mobileScrollVelocity < 0) {
+      driftDirection = -1;
+    }
+  }
+  mobileIdleTime = 0;
+}
+
+function handlePointerCancel(e) {
+  if (!isMobile) return;
+  mobileIsDragging = false;
+  try {
+    e.target.releasePointerCapture(e.pointerId);
+  } catch (err) {}
+}
+
+function handleMobileWheel(e) {
+  if (!isMobile) return;
+  if (zoomedCardIndex !== -1) return;
+  
+  // Mouse wheel scroll delta simulation
+  const scrollDelta = e.deltaY * 0.001;
+  mobileScrollAngle += scrollDelta;
+  
+  mobileScrollVelocity = 0;
+  mobileIdleTime = 0;
+  
+  if (e.cancelable) e.preventDefault();
+}
+
+// --- MOBILE TAPPING / RAYCAST CLICK HANDLER ---
+function handleMobileTap(clientX, clientY) {
+  if (isMobile && zoomedCardIndex !== -1) {
+    closeZoom();
+    return;
+  }
+  
+  const rect = renderer.domElement.getBoundingClientRect();
+  const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+  
+  raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+  
+  let closestCard = null;
+  let minDistance = Infinity;
+  
+  const bp = CONFIG.breakpoints.mobile;
+  const deltaTheta = (2.0 * Math.PI) / bp.cardsPerTurn;
+  const spacing = bp.pitch;
+  const radiusX = bp.radiusX;
+  const radiusZ = bp.radiusZ;
+  const pitchFactor = spacing / deltaTheta;
+  const L = cardMeshes.length * spacing;
+  
+  cardMeshes.forEach((card, i) => {
+    if (!card.mesh.visible || card.mesh.material.uniforms.uOpacity.value < 0.15) {
+      return;
     }
     
-    if (e.cancelable) e.preventDefault();
-  }
-}
-
-function handleTouchEnd(e) {
-  if (isMobile && zoomedCardIndex !== -1) return;
-  isDraggingMobile = false;
-  
-  // Apply deceleration momentum on swipe release
-  const absVelocity = Math.abs(touchVelocity);
-  if (absVelocity > 0.08) {
-    const dir = touchVelocity > 0 ? 1 : -1;
-    const bp = getCurrentBreakpoint();
-    // Math: final swipe inertia added directly to scroll target
-    const momentum = Math.min(2.5, absVelocity * 15.0) * dir;
-    targetScrollAngle += momentum * (bp.dragSensitivity / 0.0016) * bp.touchMomentumMultiplier;
+    // Base mathematical coordinates along the helix (exact same as animate)
+    const baseTheta = i * deltaTheta;
+    let theta = baseTheta - mobileScrollAngle;
     
-    // Shift auto drift direction based on user kinetic swipe direction
-    driftDirection = dir > 0 ? 1 : -1; // Reverse drift direction
+    let cy = theta * pitchFactor;
+    const halfL = L / 2.0;
+    cy = ((cy + halfL) % L);
+    if (cy < 0.0) cy += L;
+    cy -= halfL;
+    
+    const wrappedTheta = cy / pitchFactor;
+    const cosTheta = Math.cos(wrappedTheta);
+    const sinTheta = Math.sin(wrappedTheta);
+    
+    // Only allow clicking cards in the front half
+    if (cosTheta < -0.2) return;
+    
+    const depthFactor = (cosTheta + 1.0) / 2.0;
+    const focusFactor = Math.exp(-Math.pow(cy / bp.bendSpread, 2.0));
+    
+    const baseScale = bp.cardWidthScale;
+    let scaleVal = (0.55 + 0.45 * depthFactor) * baseScale;
+    if (i === activeFocusedIndex) {
+      scaleVal *= (1.0 + (CONFIG.focusScale - 1.0) * focusFactor);
+    }
+    
+    // Center point in world space
+    const cx = radiusX * sinTheta;
+    const cz = radiusZ * cosTheta;
+    const C = new THREE.Vector3(cx, cy, cz);
+    
+    // Normal vector
+    const N = new THREE.Vector3(-sinTheta, 0, cosTheta);
+    
+    // Tangent plane
+    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(N, C);
+    
+    const intersectPoint = new THREE.Vector3();
+    const hasIntersection = raycaster.ray.intersectPlane(plane, intersectPoint);
+    
+    if (hasIntersection) {
+      const T = new THREE.Vector3(cosTheta, 0, sinTheta);
+      const V = new THREE.Vector3(0, 1, 0);
+      
+      const diff = new THREE.Vector3().subVectors(intersectPoint, C);
+      const u = diff.dot(T);
+      const v = diff.dot(V);
+      
+      const W = card.width * scaleVal;
+      const H = card.height * scaleVal;
+      
+      if (Math.abs(u) <= W / 2.0 && Math.abs(v) <= H / 2.0) {
+        const distance = raycaster.ray.origin.distanceTo(intersectPoint);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestCard = card;
+        }
+      }
+    }
+  });
+  
+  if (closestCard) {
+    openZoom(closestCard.uniqueIndex);
   }
 }
 
@@ -918,26 +1027,51 @@ function recalculateLayout() {
   renderer.setSize(width, height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, bp.dprCap));
   
-  // Update card sizes dynamically to fit viewport bounds perfectly
   const deltaTheta = (2.0 * Math.PI) / bp.cardsPerTurn;
-  const horizontalLimit = bp.radius * deltaTheta * bp.cardWidthScale;
-  const verticalLimit = bp.pitch * bp.cardHeightScale;
   
-  cardMeshes.forEach(card => {
-    // Determine target dimensions mathematically to fit both horizontal and vertical limits
-    const targetHeight = Math.min(horizontalLimit / card.aspect, verticalLimit);
-    const cardWidth = targetHeight * card.aspect;
+  if (isMobile) {
+    // Mobile card sizing: target exactly 70% of visible viewport width
+    const visibleHeight = 2.0 * bp.cameraZ * Math.tan((bp.fov / 2.0) * Math.PI / 180.0);
+    const visibleWidth = visibleHeight * camera.aspect;
     
-    card.mesh.geometry.dispose();
-    card.mesh.geometry = new THREE.PlaneGeometry(cardWidth, targetHeight, 32, 1);
+    cardMeshes.forEach(card => {
+      // Clamp geometry aspect ratio on mobile to prevent extreme stretched proportions
+      const cardAspect = Math.max(0.8, Math.min(1.5, card.aspect));
+      const cardWidth = visibleWidth * bp.cardWidthScale;
+      const targetHeight = cardWidth / cardAspect;
+      
+      card.mesh.geometry.dispose();
+      card.mesh.geometry = new THREE.PlaneGeometry(cardWidth, targetHeight, 32, 1);
+      
+      card.width = cardWidth;
+      card.height = targetHeight;
+      
+      // Update mobile uniforms
+      card.mesh.material.uniforms.uRadius.value = bp.radiusZ;
+      card.mesh.material.uniforms.uAspect.value = cardAspect;
+      card.mesh.material.uniforms.uImageAspect.value = card.aspect;
+    });
+  } else {
+    // Desktop and Tablet card sizing
+    const horizontalLimit = bp.radius * deltaTheta * bp.cardWidthScale;
+    const verticalLimit = bp.pitch * bp.cardHeightScale;
     
-    // Store size attributes on card object for dynamic center offset calculations
-    card.width = cardWidth;
-    card.height = targetHeight;
-    
-    // Update uniforms
-    card.mesh.material.uniforms.uRadius.value = bp.radius;
-  });
+    cardMeshes.forEach(card => {
+      const targetHeight = Math.min(horizontalLimit / card.aspect, verticalLimit);
+      const cardWidth = targetHeight * card.aspect;
+      
+      card.mesh.geometry.dispose();
+      card.mesh.geometry = new THREE.PlaneGeometry(cardWidth, targetHeight, 32, 1);
+      
+      card.width = cardWidth;
+      card.height = targetHeight;
+      
+      // Update desktop uniforms
+      card.mesh.material.uniforms.uRadius.value = bp.radius;
+      card.mesh.material.uniforms.uAspect.value = card.aspect;
+      card.mesh.material.uniforms.uImageAspect.value = card.aspect;
+    });
+  }
 }
 
 // --- NAVIGATION & MODALS SYSTEM ---
@@ -995,11 +1129,25 @@ function setupNavigation() {
     e.stopPropagation();
     closeMenu();
     
-    // Scroll back to center (corresponds to image 0) on Work click
-    const docHeight = document.documentElement.scrollHeight;
-    const winHeight = window.innerHeight;
-    const S_mid = Math.round((docHeight - winHeight) / 2.0);
-    window.scrollTo({ top: S_mid, behavior: 'smooth' });
+    if (isMobile) {
+      // Reset virtual helix scroll position smoothly to 0 using GSAP
+      gsap.to({ val: mobileScrollAngle }, {
+        val: 0.0,
+        duration: 0.8,
+        ease: "power2.out",
+        onUpdate: function() {
+          mobileScrollAngle = this.targets()[0].val;
+          mobileScrollVelocity = 0.0;
+          mobileIdleTime = 0.0;
+        }
+      });
+    } else {
+      // Scroll back to center (corresponds to image 0) on Work click
+      const docHeight = document.documentElement.scrollHeight;
+      const winHeight = window.innerHeight;
+      const S_mid = Math.round((docHeight - winHeight) / 2.0);
+      window.scrollTo({ top: S_mid, behavior: 'smooth' });
+    }
   });
   
   // Transition to Sub-panels
@@ -1069,16 +1217,46 @@ function animate() {
   
   const bp = getCurrentBreakpoint();
   
-  // 0. Auto drift continuous scroll
-  targetScrollAngle += driftDirection * CONFIG.autoScrollSpeed;
-  
-  // 1. Smooth Scroll Physics (Time-independent Lerp/Decay)
-  const decayRate = -60.0 * Math.log(1.0 - bp.lerpSpeed);
-  currentScrollAngle += (targetScrollAngle - currentScrollAngle) * (1.0 - Math.exp(-decayRate * deltaTimeSeconds));
-  
-  // 1.5. Calculate scroll speed/velocity (for dynamic motion blur & swirling particles)
-  scrollVelocity = currentScrollAngle - lastScrollAngle;
-  lastScrollAngle = currentScrollAngle;
+  if (isMobile) {
+    if (!mobileIsDragging) {
+      // Time-independent friction deceleration on velocity
+      const friction = 0.94; // equivalent per-frame decay
+      const frictionDecay = -60.0 * Math.log(friction);
+      mobileScrollVelocity *= Math.exp(-frictionDecay * deltaTimeSeconds);
+      
+      // Update virtual scroll angle
+      mobileScrollAngle += mobileScrollVelocity * deltaTimeSeconds;
+      
+      // Handle automatic slow drift after 2 seconds of idleness
+      if (Math.abs(mobileScrollVelocity) < 0.05 && zoomedCardIndex === -1) {
+        mobileIdleTime += deltaTimeSeconds;
+        if (mobileIdleTime > 2.0) {
+          mobileScrollAngle += driftDirection * CONFIG.autoScrollSpeed * 60.0 * deltaTimeSeconds;
+        }
+      } else {
+        mobileIdleTime = 0;
+      }
+    }
+    
+    // Keep virtual angle normalized to stay within bounds
+    const deltaTheta = (2.0 * Math.PI) / bp.cardsPerTurn;
+    const L_angle = cardMeshes.length * deltaTheta;
+    mobileScrollAngle = (mobileScrollAngle % L_angle);
+    if (mobileScrollAngle < 0.0) mobileScrollAngle += L_angle;
+    
+    scrollVelocity = mobileScrollVelocity * deltaTimeSeconds;
+  } else {
+    // 0. Auto drift continuous scroll
+    targetScrollAngle += driftDirection * CONFIG.autoScrollSpeed;
+    
+    // 1. Smooth Scroll Physics (Time-independent Lerp/Decay)
+    const decayRate = -60.0 * Math.log(1.0 - bp.lerpSpeed);
+    currentScrollAngle += (targetScrollAngle - currentScrollAngle) * (1.0 - Math.exp(-decayRate * deltaTimeSeconds));
+    
+    // 1.5. Calculate scroll speed/velocity (for dynamic motion blur & swirling particles)
+    scrollVelocity = currentScrollAngle - lastScrollAngle;
+    lastScrollAngle = currentScrollAngle;
+  }
   
   // 1.6. Update background golden particles drift & swirl
   if (particlesPoints) {
@@ -1148,121 +1326,124 @@ function animate() {
   let minFocusDist = Infinity;
   
   cardMeshes.forEach((card, i) => {
-    // index-distance culling for mobile performance budget
-    const N_total = cardMeshes.length;
-    const indexDist = activeFocusedIndex === -1 ? 0 : Math.min(
-      Math.abs(i - activeFocusedIndex),
-      N_total - Math.abs(i - activeFocusedIndex)
-    );
+    // 3.1. Base mathematical coordinates along the helix
+    const baseTheta = i * deltaTheta;
+    let thetaVal, xOffset, yVal, zVal, scaleVal, opacityVal, brightVal, blurVal;
+    let bendVal = 1.0;
     
-    if (isMobile && indexDist > 6) {
-      card.mesh.visible = false;
-      card.mesh.material.uniforms.uOpacity.value = 0.0;
-      return;
+    if (isMobile) {
+      card.mesh.visible = true;
+      
+      let theta = baseTheta - mobileScrollAngle;
+      
+      // Calculate vertical position proportional to angle
+      let y = theta * pitchFactor;
+      
+      // Infinite wrapping modulo to keep Y in range [-L/2, L/2]
+      const halfL = L / 2.0;
+      y = ((y + halfL) % L);
+      if (y < 0.0) y += L;
+      y -= halfL;
+      
+      const wrappedTheta = y / pitchFactor;
+      const cosTheta = Math.cos(wrappedTheta);
+      const sinTheta = Math.sin(wrappedTheta);
+      
+      // Save wrapped vertical position on object for query
+      card.yWrapped = y;
+      
+      // Track focus distance to center (y = 0)
+      const distToFocus = Math.abs(y);
+      if (distToFocus < minFocusDist) {
+        minFocusDist = distToFocus;
+        newFocusedIndex = i;
+      }
+      
+      // Focus factor: Gaussian falloff based on vertical distance to center screen
+      const focusFactor = Math.exp(-Math.pow(y / bp.bendSpread, 2.0));
+      
+      // Depth factor: 1.0 at front (closest to camera), 0.0 at back (furthest)
+      const depthFactor = (cosTheta + 1.0) / 2.0;
+      
+      // Card size scaling based on depth and focus boost
+      scaleVal = (0.55 + 0.45 * depthFactor);
+      if (i === activeFocusedIndex) {
+        scaleVal *= (1.0 + (CONFIG.focusScale - 1.0) * focusFactor);
+      }
+      
+      // Opacity: front cards 1.0, back cards fading to 0.15
+      opacityVal = 0.15 + 0.85 * depthFactor;
+      
+      // Brightness: front cards bright, back cards dark
+      brightVal = (0.4 + 0.6 * depthFactor) * (1.0 + (CONFIG.focusBrightness - 1.0) * focusFactor);
+      
+      // Blur: front cards sharp, back cards soft
+      blurVal = 1.0 - depthFactor;
+      
+      // Elliptical helix positions
+      thetaVal = wrappedTheta;
+      xOffset = (bp.radiusX + bp.radiusZ) * sinTheta;
+      yVal = y;
+      zVal = 0.0;
     } else {
       card.mesh.visible = true;
-    }
-
-    // Base mathematical coordinates along the helix
-    const baseTheta = i * deltaTheta;
-    let theta = baseTheta - currentScrollAngle;
-    
-    // Calculate vertical position proportional to angle
-    let y = theta * pitchFactor;
-    
-    // Infinite wrapping modulo to keep Y in range [-L/2, L/2]
-    const halfL = L / 2.0;
-    y = ((y + halfL) % L);
-    if (y < 0.0) y += L;
-    y -= halfL;
-    
-    // Deduce wrapped angle corresponding to wrapped position
-    const wrappedTheta = y / pitchFactor;
-    
-    // Compute thetaVal and xPath based on device mode
-    let thetaVal, xPath;
-    const yNorm = y / yEdge;
-    const yUser = 50.0 - 50.0 * yNorm;
-    if (isMobile) {
-      const xUser = getHelixX(yUser);
-      xPath = ((xUser - 50.0) / 100.0) * visibleWidth;
-      thetaVal = 1.5 * Math.PI + Math.PI * (yUser - 40.0) / 35.0;
-    } else {
+      
+      let theta = baseTheta - currentScrollAngle;
+      
+      // Calculate vertical position proportional to angle
+      let y = theta * pitchFactor;
+      
+      // Infinite wrapping modulo to keep Y in range [-L/2, L/2]
+      const halfL = L / 2.0;
+      y = ((y + halfL) % L);
+      if (y < 0.0) y += L;
+      y -= halfL;
+      
+      // Deduce wrapped angle corresponding to wrapped position
+      const wrappedTheta = y / pitchFactor;
       thetaVal = wrappedTheta;
-    }
-    
-    // Save wrapped vertical position on object for query
-    card.yWrapped = y;
-    
-    // Track focus distance to center (y = 0)
-    const distToFocus = Math.abs(y);
-    if (distToFocus < minFocusDist) {
-      minFocusDist = distToFocus;
-      newFocusedIndex = i;
-    }
-    
-    // 4. Calculate dynamic attributes based on focus
-    const spread = bp.bendSpread;
-    
-    // Gaussian falloff for clean center magnification
-    const focusFactor = Math.exp(-Math.pow(y / spread, 2.0));
-    
-    // Enforce 100% cylindrical curvature so tangent planes do not intersect/overlap
-    const bendVal = 1.0;
-    
-    // Active Scale scaling
-    const scaleVal = 1.0 + (CONFIG.focusScale - 1.0) * focusFactor;
-    
-    // Z-axis focal boost to bring the active card in front
-    const zVal = focusFactor * 0.4;
-    
-    // Smooth falloff for image opacity
-    let opacityVal = CONFIG.unfocusedOpacity + (1.0 - CONFIG.unfocusedOpacity) * focusFactor;
-    
-    // Fade out at the back of the cylinder to prevent wrapping pop
-    const cosTheta = Math.cos(thetaVal);
-    const fadeFactor = THREE.MathUtils.smoothstep(cosTheta, -0.85, -0.5);
-    opacityVal *= fadeFactor;
-    
-    // Mobile boundary fade-out to prevent clamping stack-up overlap
-    if (isMobile) {
-      let pathFade = 1.0;
-      if (yUser < 25.0 || yUser > 85.0) {
-        pathFade = 0.0;
-      } else if (yUser < 29.0) {
-        pathFade = (yUser - 25.0) / 4.0;
-      } else if (yUser > 81.0) {
-        pathFade = (85.0 - yUser) / 4.0;
+      
+      const yNorm = y / yEdge;
+      
+      // Save wrapped vertical position on object for query
+      card.yWrapped = y;
+      
+      // Track focus distance to center (y = 0)
+      const distToFocus = Math.abs(y);
+      if (distToFocus < minFocusDist) {
+        minFocusDist = distToFocus;
+        newFocusedIndex = i;
       }
-      opacityVal *= pathFade;
-    }
-    
-    // Brightness highlight
-    const brightVal = 1.0 + (CONFIG.focusBrightness - 1.0) * focusFactor;
-    
-    // Calculate blur based on 3D depth, screen vertical edges, and scroll velocity
-    const wrappedZ = radius * cosTheta;
-    const depthBlur = Math.max(0.0, Math.min(1.0, (radius - wrappedZ) / (2.0 * radius)));
-    const edgeBlur = Math.min(1.0, Math.abs(y) / yEdge);
-    
-    // Dynamic motion blur proportional to scroll speed
-    const velocityBlur = Math.min(0.55, Math.abs(scrollVelocity) * 20.0);
-    const blurVal = Math.max(depthBlur, edgeBlur, velocityBlur);
-    
-    // Calculate xOffset using the 3rd-order odd polynomial mapping with 30%-70% boundary clamps (desktop) or spline path (mobile)
-    if (!isMobile) {
-      // Dynamically calculate maxCenterOffset so card edges align exactly at 30% and 70% of screen width
+      
+      const focusFactor = Math.exp(-Math.pow(y / bp.bendSpread, 2.0));
+      scaleVal = 1.0 + (CONFIG.focusScale - 1.0) * focusFactor;
+      zVal = focusFactor * 0.4;
+      
+      opacityVal = CONFIG.unfocusedOpacity + (1.0 - CONFIG.unfocusedOpacity) * focusFactor;
+      const cosTheta = Math.cos(thetaVal);
+      const fadeFactor = THREE.MathUtils.smoothstep(cosTheta, -0.85, -0.5);
+      opacityVal *= fadeFactor;
+      
+      brightVal = 1.0 + (CONFIG.focusBrightness - 1.0) * focusFactor;
+      
+      const wrappedZ = radius * cosTheta;
+      const depthBlur = Math.max(0.0, Math.min(1.0, (radius - wrappedZ) / (2.0 * radius)));
+      const edgeBlur = Math.min(1.0, Math.abs(y) / yEdge);
+      const velocityBlur = Math.min(0.55, Math.abs(scrollVelocity) * 20.0);
+      blurVal = Math.max(depthBlur, edgeBlur, velocityBlur);
+      
       const cardWidthRatio = (card.width * scaleVal) / visibleWidth;
       const maxCenterOffset = visibleWidth * (0.20 - cardWidthRatio / 2.0);
-      xPath = maxCenterOffset * (Math.pow(yNorm, 3) - 0.75 * yNorm) / 0.25;
+      const xPath = maxCenterOffset * (Math.pow(yNorm, 3) - 0.75 * yNorm) / 0.25;
+      xOffset = xPath + radius * Math.sin(thetaVal);
+      yVal = y;
     }
-    const xOffset = xPath + radius * Math.sin(thetaVal);
     
     // Calculate final interpolated zoom properties
     const zoom = card.zoomProgress || 0.0;
     
     let finalTheta = thetaVal;
-    let finalY = y;
+    let finalY = yVal;
     let finalZ = zVal;
     let finalXOffset = xOffset;
     let finalBend = bendVal;
@@ -1275,19 +1456,19 @@ function animate() {
       const targetTheta = 0.0;
       const targetY = 0.0;
       const targetZ = 4.8;
-      const targetZC = targetZ - radius; // Correct for Z-rendering offset: uZC + uRadius in vertex shader
+      const targetZC = targetZ - bp.radiusZ; // Correct for Z-rendering offset: uZC + uRadius in vertex shader
       const targetXOffset = 0.0;
       const targetBend = 0.0; // flat plane
       
-      const distToCam = cameraZ - targetZ;
-      const visH = 2.0 * distToCam * Math.tan((CONFIG.fov / 2.0) * Math.PI / 180.0);
+      const distToCam = bp.cameraZ - targetZ;
+      const visH = 2.0 * distToCam * Math.tan((bp.fov / 2.0) * Math.PI / 180.0);
       const visW = visH * camera.aspect;
       const scaleToFitH = (visH * 0.88) / card.height;
       const scaleToFitW = (visW * 0.88) / card.width;
       const targetScale = Math.min(scaleToFitH, scaleToFitW);
       
       finalTheta = THREE.MathUtils.lerp(thetaVal, targetTheta, zoom);
-      finalY = THREE.MathUtils.lerp(y, targetY, zoom);
+      finalY = THREE.MathUtils.lerp(yVal, targetY, zoom);
       finalZ = THREE.MathUtils.lerp(zVal, targetZC, zoom); // Lerp to corrected ZC coordinate
       finalXOffset = THREE.MathUtils.lerp(xOffset, targetXOffset, zoom);
       finalBend = THREE.MathUtils.lerp(bendVal, targetBend, zoom);
@@ -1329,7 +1510,7 @@ function animate() {
     
     // Mobile roll-deck rotation around X-axis for extra depth
     if (isMobile) {
-      targetTiltX = THREE.MathUtils.lerp(-y * 0.08, 0.0, zoom);
+      targetTiltX = THREE.MathUtils.lerp(-yVal * 0.08, 0.0, zoom);
     }
     
     card.tiltX += (targetTiltX - card.tiltX) * 0.08;

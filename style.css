@@ -1175,6 +1175,9 @@ a.info-value:hover {
 }
 
 @media (max-width: 768px) {
+  #scroll-container {
+    display: none;
+  }
   /* Layout adjustments */
   .ui-wrapper {
     padding: 25px 30px;
