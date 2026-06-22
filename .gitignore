@@ -1,5 +1,3 @@
-# Ignore backup files
+# Ignore local backup files and generated visual previews
 app_backup_*.js
-
-# Ignore duplicate assets folder
-assets/
+*-preview.png

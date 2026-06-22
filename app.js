@@ -51,17 +51,17 @@ const CONFIG = {
     },
     mobile: {
       minWidth: 0,
-      radiusX: 2.08,         // Keeps both side lanes visible while retaining edge clipping
+      radiusX: 2.18,         // Adds horizontal breathing room between adjacent spiral lanes
       radiusZ: 1.15,         // Compressed depth matches the reference's dense layered tunnel
-      pitch: 0.38,           // Nine cards produce a 3.42-unit rise per complete turn
+      pitch: 0.46,           // Extra vertical separation while retaining multiple visible turns
       cardsPerTurn: 9.0,
       cameraZ: 6.3,
       fov: 52,
-      landscapeWidthRatio: 0.68,
-      squareWidthRatio: 0.60,
-      portraitWidthRatio: 0.52,
-      maxScreenWidthRatio: 0.76,
-      maxScreenHeightRatio: 0.50,
+      landscapeWidthRatio: 0.64,
+      squareWidthRatio: 0.56,
+      portraitWidthRatio: 0.49,
+      maxScreenWidthRatio: 0.72,
+      maxScreenHeightRatio: 0.46,
       minDepthScale: 0.76,
       rearOpacity: 0.46,
       maxDepthBlur: 0.27,
@@ -100,7 +100,7 @@ function applyScrollDelta(delta, isTouch) {
 
 // --- DATASET & METADATA ---
 // HOW TO REPLACE WITH YOUR OWN PHOTOS:
-// 1. Drop your images (PNG, JPG, WebP) into the `assets/images/` folder.
+// 1. Drop your images (PNG, JPG, WebP) into the `images/` folder.
 // 2. Add or modify entries in the `GALLERY_ITEMS` array below.
 // 3. Make sure to specify the correct relative URL in the `url` field.
 // 4. Update the `title` and `category` fields to display custom information in the UI focus panel.
