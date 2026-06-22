@@ -51,17 +51,21 @@ const CONFIG = {
     },
     mobile: {
       minWidth: 0,
-      radiusX: 3.0,          // Elliptical helix horizontal radius
-      radiusZ: 1.6,          // Elliptical helix depth radius
-      pitch: 1.0,            // Vertical spacing (pitch)
-      cardsPerTurn: 8.0,     // Angular spacing parameter (8 cards per 360 degrees)
-      cameraZ: 6.0,          // Distance of camera
-      fov: 50,               // Mobile FOV
+      radiusX: 2.08,         // Keeps both side lanes visible while retaining edge clipping
+      radiusZ: 1.15,         // Compressed depth matches the reference's dense layered tunnel
+      pitch: 0.38,           // Nine cards produce a 3.42-unit rise per complete turn
+      cardsPerTurn: 9.0,
+      cameraZ: 6.3,
+      fov: 52,
       landscapeWidthRatio: 0.68,
       squareWidthRatio: 0.60,
-      portraitWidthRatio: 0.54,
+      portraitWidthRatio: 0.52,
       maxScreenWidthRatio: 0.76,
-      maxScreenHeightRatio: 0.55,
+      maxScreenHeightRatio: 0.50,
+      minDepthScale: 0.76,
+      rearOpacity: 0.46,
+      maxDepthBlur: 0.27,
+      maxCardYaw: 0.48,
       dragSensitivity: 0.0022,
       touchMomentumMultiplier: 0.75,
       lerpSpeed: 0.09,
@@ -551,47 +555,44 @@ function getMobileCardTransform(cardIndex, galleryPosition) {
   // Deduce wrapped angle corresponding to wrapped position
   const wrappedTheta = y / pitchFactor;
   
-  // Angle wrapped to [-PI, PI] for smooth frontness-bending checks
+  // Stable orbital angle in [-PI, PI] for focus and interaction calculations.
   const wrappedAngle = Math.atan2(Math.sin(wrappedTheta), Math.cos(wrappedTheta));
-  const absAngle = Math.abs(wrappedAngle);
   
-  // Elliptical coordinate projections
-  const x = bp.radiusX * Math.sin(wrappedTheta);
-  const z = bp.radiusZ * Math.cos(wrappedTheta);
-  const rotationY = wrappedTheta;
-  
-  // Subtle vertical tilt (deck tilt) - center card has tiltX = 0
-  const tiltX = THREE.MathUtils.clamp(-y * 0.025, -0.10, 0.10);
-  
-  // Focus factor: Gaussian falloff based on vertical distance to center screen
-  const focusFactor = Math.exp(-Math.pow(y / bp.bendSpread, 2.0));
-  
-  // Depth factor: 1.0 at front (closest to camera), 0.0 at back (furthest)
-  const depthFactor = (Math.cos(wrappedTheta) + 1.0) / 2.0;
-  
-  // Scale based on depth and subtle focus boost
-  const mobileFocusBoost = 1.05;
-  const scale = depthFactor * THREE.MathUtils.lerp(1.0, mobileFocusBoost, focusFactor);
-  
-  // Opacity: front cards 1.0, back cards fading to 0.15
-  const opacity = 0.15 + 0.85 * depthFactor;
-  
-  // Brightness: front cards bright, back cards dark
-  const brightness = (0.4 + 0.6 * depthFactor) * (1.0 + (CONFIG.focusBrightness - 1.0) * focusFactor);
-  
-  // Blur: front cards sharp (blur = 0), back cards soft (blur = 1) - GRADUAL
-  const frontness = depthFactor;
-  const blurStart = 0.72;
-  const blurAmount = 1.0 - THREE.MathUtils.smoothstep(frontness, 0.15, blurStart);
-  const blur = blurAmount * 0.45;
-  
-  // Bending (subtle bending on sides, flat at front)
-  // Front zone (0-35 deg): bend factor exactly 0
-  // Side zone (35-80 deg): smoothstep up to max 0.18
-  const bendStart = THREE.MathUtils.degToRad(35);
-  const bendFull = THREE.MathUtils.degToRad(80);
-  const turnAmount = THREE.MathUtils.smoothstep(absAngle, bendStart, bendFull);
-  const bend = turnAmount * 0.18;
+  // Elliptical spiral coordinates. A compact pitch exposes several front/side/rear
+  // layers at once, which is what makes the composition read as a spiral.
+  const sinTheta = Math.sin(wrappedTheta);
+  const cosTheta = Math.cos(wrappedTheta);
+  const x = bp.radiusX * sinTheta;
+  const z = bp.radiusZ * cosTheta;
+
+  // Keep cards readable around the sides. A literal tangent rotation (theta)
+  // makes side cards disappear edge-on; the reference biases every card toward
+  // the camera while preserving enough yaw to communicate the turn.
+  const rotationY = -sinTheta * bp.maxCardYaw;
+  const tiltX = THREE.MathUtils.clamp(-y * 0.012, -0.055, 0.055);
+
+  // 1 at the front of the orbit, 0 at the rear.
+  const frontness = (cosTheta + 1.0) * 0.5;
+  const verticalFocus = Math.exp(-Math.pow(y / 1.35, 2.0));
+
+  // Never collapse side or rear cards. They are essential visual evidence of
+  // the second turn and the central depth corridor.
+  const depthScale = THREE.MathUtils.lerp(bp.minDepthScale, 1.0, frontness);
+  const focusBoost = THREE.MathUtils.lerp(1.0, 1.035, frontness * verticalFocus);
+  const scale = depthScale * focusBoost;
+
+  const opacity = THREE.MathUtils.lerp(bp.rearOpacity, 1.0, frontness);
+  const brightness = THREE.MathUtils.lerp(0.58, 1.04, frontness);
+  const blur = THREE.MathUtils.lerp(bp.maxDepthBlur, 0.0, frontness);
+
+  // Mobile cards stay rigid. Perspective, yaw, depth, blur and occlusion create
+  // the spiral; bending the image surface made the central card look warped.
+  const bend = 0.0;
+
+  // Prefer a genuinely front-facing card near the visual centre. This prevents
+  // a vertically centred rear card from taking over the counter/focus state.
+  const normalizedY = Math.min(1.0, Math.abs(y) / 3.0);
+  const focusScore = normalizedY * 0.34 + (1.0 - frontness) * 0.66;
   
   return {
     theta: wrappedTheta,
@@ -605,7 +606,9 @@ function getMobileCardTransform(cardIndex, galleryPosition) {
     bend,
     opacity,
     brightness,
-    blur
+    blur,
+    frontness,
+    focusScore
   };
 }
 
@@ -1012,6 +1015,7 @@ function handleMobileTap(clientX, clientY) {
   const y = -((clientY - rect.top) / rect.height) * 2 + 1;
   
   raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+  scene.updateMatrixWorld(true);
   
   // Filter active/visible meshes with sufficient opacity
   const meshesToIntersect = cardMeshes
@@ -1399,8 +1403,8 @@ function animate() {
       // Save wrapped vertical position on object for query
       card.yWrapped = t.y;
       
-      // Track focus distance to center (y = 0)
-      const distToFocus = Math.abs(t.y);
+      // Focus mobile cards using both screen position and actual orbital depth.
+      const distToFocus = t.focusScore;
       if (distToFocus < minFocusDist) {
         minFocusDist = distToFocus;
         newFocusedIndex = i;
@@ -1492,6 +1496,7 @@ function animate() {
       const targetXOffset = 0.0;
       const targetRotY = 0.0;
       const targetRotX = 0.0;
+      const targetBend = 0.0;
       
       const distToCam = bp.cameraZ - targetZ;
       const visH = 2.0 * distToCam * Math.tan((bp.fov / 2.0) * Math.PI / 180.0);
@@ -1555,6 +1560,7 @@ function animate() {
       card.mesh.position.set(finalXOffset, finalY, finalZ);
       card.mesh.rotation.set(finalRotX, finalRotY, 0.0);
       card.mesh.scale.set(finalScale, finalScale, 1.0);
+      card.mesh.visible = Math.abs(finalY) < 5.2 || zoom > 0.0;
     }
   });
   
