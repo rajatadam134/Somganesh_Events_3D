@@ -51,13 +51,17 @@ const CONFIG = {
     },
     mobile: {
       minWidth: 0,
-      radiusX: 2.4,          // Elliptical helix horizontal radius
-      radiusZ: 1.8,          // Elliptical helix depth radius
-      pitch: 0.60,           // Vertical spacing (pitch)
-      cardsPerTurn: 8.5,     // Angular spacing parameter (approx. 8.5 cards per 360 degrees)
-      cameraZ: 5.6,          // Distance of camera
+      radiusX: 3.0,          // Elliptical helix horizontal radius
+      radiusZ: 1.6,          // Elliptical helix depth radius
+      pitch: 1.0,            // Vertical spacing (pitch)
+      cardsPerTurn: 8.0,     // Angular spacing parameter (8 cards per 360 degrees)
+      cameraZ: 6.0,          // Distance of camera
       fov: 50,               // Mobile FOV
-      cardWidthScale: 0.70,  // Occupies 70% of screen width
+      landscapeWidthRatio: 0.68,
+      squareWidthRatio: 0.60,
+      portraitWidthRatio: 0.54,
+      maxScreenWidthRatio: 0.76,
+      maxScreenHeightRatio: 0.55,
       dragSensitivity: 0.0022,
       touchMomentumMultiplier: 0.75,
       lerpSpeed: 0.09,
@@ -133,57 +137,60 @@ const vertexShader = `
   uniform float uTiltY;
   uniform float uBendFactor;
   uniform float uScale;
+  uniform float uUseGPUTransform; // 1.0 = GPU cylinder projection, 0.0 = Standard projection
   varying vec2 vUv;
 
   void main() {
     vUv = uv;
     
-    // Scale local vertices
-    vec3 localPos = position * uScale;
-    
-    // Apply local rotations (tilts)
-    // 1. Rotate around X-axis (TiltX)
-    float cx = cos(uTiltX);
-    float sx = sin(uTiltX);
-    vec3 posAfterX = vec3(
-      localPos.x,
-      localPos.y * cx - localPos.z * sx,
-      localPos.y * sx + localPos.z * cx
-    );
-    
-    // 2. Rotate around Y-axis (TiltY)
-    float cy = cos(uTiltY);
-    float sy = sin(uTiltY);
-    vec3 posRotated = vec3(
-      posAfterX.x * cy + posAfterX.z * sy,
-      posAfterX.y,
-      -posAfterX.x * sy + posAfterX.z * cy
-    );
-    
-    // Cylindrical coordinates projection
-    // Center of the card on the cylinder is at angle uThetaC
-    // Vertex is displaced horizontally by posRotated.x
-    float safeRadius = uRadius == 0.0 ? 1.0 : uRadius;
-    float theta = uThetaC - (posRotated.x / safeRadius);
-    
-    // 3. Bent cylinder position (with radial depth projection of rotated offsets and diagonal offset)
-    vec3 posBent = vec3(
-      -(uRadius + posRotated.z) * sin(theta) + uXOffset,
-      uYC + posRotated.y,
-      uZC + (uRadius + posRotated.z) * cos(theta)
-    );
-    
-    // 4. Flat tangent position (with radial depth projection of rotated offsets and diagonal offset)
-    vec3 posFlat = vec3(
-      -(uRadius + posRotated.z) * sin(uThetaC) + posRotated.x * cos(uThetaC) + uXOffset,
-      uYC + posRotated.y,
-      uZC + (uRadius + posRotated.z) * cos(uThetaC) + posRotated.x * sin(uThetaC)
-    );
-    
-    // Interpolate between flat and bent states
-    vec3 finalPos = mix(posFlat, posBent, uBendFactor);
-    
-    gl_Position = projectionMatrix * viewMatrix * vec4(finalPos, 1.0);
+    if (uUseGPUTransform == 0.0) {
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    } else {
+      // Scale local vertices
+      vec3 localPos = position * uScale;
+      
+      // Apply local rotations (tilts)
+      // 1. Rotate around X-axis (TiltX)
+      float cx = cos(uTiltX);
+      float sx = sin(uTiltX);
+      vec3 posAfterX = vec3(
+        localPos.x,
+        localPos.y * cx - localPos.z * sx,
+        localPos.y * sx + localPos.z * cx
+      );
+      
+      // 2. Rotate around Y-axis (TiltY)
+      float cy = cos(uTiltY);
+      float sy = sin(uTiltY);
+      vec3 posRotated = vec3(
+        posAfterX.x * cy + posAfterX.z * sy,
+        posAfterX.y,
+        -posAfterX.x * sy + posAfterX.z * cy
+      );
+      
+      // Cylindrical coordinates projection
+      float safeRadius = uRadius == 0.0 ? 1.0 : uRadius;
+      float theta = uThetaC - (posRotated.x / safeRadius);
+      
+      // 3. Bent cylinder position
+      vec3 posBent = vec3(
+        -(uRadius + posRotated.z) * sin(theta) + uXOffset,
+        uYC + posRotated.y,
+        uZC + (uRadius + posRotated.z) * cos(theta)
+      );
+      
+      // 4. Flat tangent position
+      vec3 posFlat = vec3(
+        -(uRadius + posRotated.z) * sin(uThetaC) + posRotated.x * cos(uThetaC) + uXOffset,
+        uYC + posRotated.y,
+        uZC + (uRadius + posRotated.z) * cos(uThetaC) + posRotated.x * sin(uThetaC)
+      );
+      
+      // Interpolate between flat and bent states
+      vec3 finalPos = mix(posFlat, posBent, uBendFactor);
+      
+      gl_Position = projectionMatrix * viewMatrix * vec4(finalPos, 1.0);
+    }
   }
 `;
 
@@ -485,7 +492,8 @@ function buildGallery(loadedCards) {
         uBrightness: { value: 1.0 },
         uBlur: { value: 0.0 },
         uAspect: { value: cardData.aspect },
-        uImageAspect: { value: cardData.aspect }
+        uImageAspect: { value: cardData.aspect },
+        uUseGPUTransform: { value: 1.0 }
       },
       transparent: true,
       depthWrite: true, // Enabled for pixel-perfect 3D depth-buffer sorting
@@ -514,6 +522,90 @@ function buildGallery(loadedCards) {
   
   // Calculate the correct visual scale of the images to fit the viewport perfectly
   recalculateLayout();
+}
+
+// --- MOBILE HELIX POSITION TRANSFORM HELPER ---
+function getMobileCardTransform(cardIndex, galleryPosition) {
+  const bp = CONFIG.breakpoints.mobile;
+  const N = cardMeshes.length;
+  
+  const deltaTheta = (2.0 * Math.PI) / bp.cardsPerTurn;
+  const spacing = bp.pitch;
+  const pitchFactor = spacing / deltaTheta;
+  const L = N * spacing;
+  
+  // Base mathematical coordinates along the helix
+  const baseTheta = cardIndex * deltaTheta;
+  let theta = baseTheta - galleryPosition;
+  
+  // Calculate vertical position proportional to angle
+  let y = theta * pitchFactor;
+  
+  // Infinite wrapping modulo to keep Y in range [-L/2, L/2]
+  const halfL = L / 2.0;
+  y = ((y + halfL) % L);
+  if (y < 0.0) y += L;
+  y -= halfL;
+  
+  // Deduce wrapped angle corresponding to wrapped position
+  const wrappedTheta = y / pitchFactor;
+  
+  // Angle wrapped to [-PI, PI] for smooth frontness-bending checks
+  const wrappedAngle = Math.atan2(Math.sin(wrappedTheta), Math.cos(wrappedTheta));
+  const absAngle = Math.abs(wrappedAngle);
+  
+  // Elliptical coordinate projections
+  const x = bp.radiusX * Math.sin(wrappedTheta);
+  const z = bp.radiusZ * Math.cos(wrappedTheta);
+  const rotationY = wrappedTheta;
+  
+  // Subtle vertical tilt (deck tilt) - center card has tiltX = 0
+  const tiltX = THREE.MathUtils.clamp(-y * 0.025, -0.10, 0.10);
+  
+  // Focus factor: Gaussian falloff based on vertical distance to center screen
+  const focusFactor = Math.exp(-Math.pow(y / bp.bendSpread, 2.0));
+  
+  // Depth factor: 1.0 at front (closest to camera), 0.0 at back (furthest)
+  const depthFactor = (Math.cos(wrappedTheta) + 1.0) / 2.0;
+  
+  // Scale based on depth and subtle focus boost
+  const mobileFocusBoost = 1.05;
+  const scale = depthFactor * THREE.MathUtils.lerp(1.0, mobileFocusBoost, focusFactor);
+  
+  // Opacity: front cards 1.0, back cards fading to 0.15
+  const opacity = 0.15 + 0.85 * depthFactor;
+  
+  // Brightness: front cards bright, back cards dark
+  const brightness = (0.4 + 0.6 * depthFactor) * (1.0 + (CONFIG.focusBrightness - 1.0) * focusFactor);
+  
+  // Blur: front cards sharp (blur = 0), back cards soft (blur = 1) - GRADUAL
+  const frontness = depthFactor;
+  const blurStart = 0.72;
+  const blurAmount = 1.0 - THREE.MathUtils.smoothstep(frontness, 0.15, blurStart);
+  const blur = blurAmount * 0.45;
+  
+  // Bending (subtle bending on sides, flat at front)
+  // Front zone (0-35 deg): bend factor exactly 0
+  // Side zone (35-80 deg): smoothstep up to max 0.18
+  const bendStart = THREE.MathUtils.degToRad(35);
+  const bendFull = THREE.MathUtils.degToRad(80);
+  const turnAmount = THREE.MathUtils.smoothstep(absAngle, bendStart, bendFull);
+  const bend = turnAmount * 0.18;
+  
+  return {
+    theta: wrappedTheta,
+    wrappedAngle: wrappedAngle,
+    x,
+    y,
+    z,
+    rotationY,
+    rotationX: tiltX,
+    scale,
+    bend,
+    opacity,
+    brightness,
+    blur
+  };
 }
 
 let resizeTimeout;
@@ -916,85 +1008,19 @@ function handleMobileTap(clientX, clientY) {
   
   raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
   
-  let closestCard = null;
-  let minDistance = Infinity;
+  // Filter active/visible meshes with sufficient opacity
+  const meshesToIntersect = cardMeshes
+    .filter(card => card.mesh.visible && card.mesh.material.uniforms.uOpacity.value >= 0.15)
+    .map(card => card.mesh);
+    
+  const intersects = raycaster.intersectObjects(meshesToIntersect);
   
-  const bp = CONFIG.breakpoints.mobile;
-  const deltaTheta = (2.0 * Math.PI) / bp.cardsPerTurn;
-  const spacing = bp.pitch;
-  const radiusX = bp.radiusX;
-  const radiusZ = bp.radiusZ;
-  const pitchFactor = spacing / deltaTheta;
-  const L = cardMeshes.length * spacing;
-  
-  cardMeshes.forEach((card, i) => {
-    if (!card.mesh.visible || card.mesh.material.uniforms.uOpacity.value < 0.15) {
-      return;
+  if (intersects.length > 0) {
+    const hitMesh = intersects[0].object;
+    const hitCard = cardMeshes.find(card => card.mesh === hitMesh);
+    if (hitCard) {
+      openZoom(hitCard.uniqueIndex);
     }
-    
-    // Base mathematical coordinates along the helix (exact same as animate)
-    const baseTheta = i * deltaTheta;
-    let theta = baseTheta - mobileScrollAngle;
-    
-    let cy = theta * pitchFactor;
-    const halfL = L / 2.0;
-    cy = ((cy + halfL) % L);
-    if (cy < 0.0) cy += L;
-    cy -= halfL;
-    
-    const wrappedTheta = cy / pitchFactor;
-    const cosTheta = Math.cos(wrappedTheta);
-    const sinTheta = Math.sin(wrappedTheta);
-    
-    // Only allow clicking cards in the front half
-    if (cosTheta < -0.2) return;
-    
-    const depthFactor = (cosTheta + 1.0) / 2.0;
-    const focusFactor = Math.exp(-Math.pow(cy / bp.bendSpread, 2.0));
-    
-    const baseScale = bp.cardWidthScale;
-    let scaleVal = (0.55 + 0.45 * depthFactor) * baseScale;
-    if (i === activeFocusedIndex) {
-      scaleVal *= (1.0 + (CONFIG.focusScale - 1.0) * focusFactor);
-    }
-    
-    // Center point in world space
-    const cx = radiusX * sinTheta;
-    const cz = radiusZ * cosTheta;
-    const C = new THREE.Vector3(cx, cy, cz);
-    
-    // Normal vector
-    const N = new THREE.Vector3(-sinTheta, 0, cosTheta);
-    
-    // Tangent plane
-    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(N, C);
-    
-    const intersectPoint = new THREE.Vector3();
-    const hasIntersection = raycaster.ray.intersectPlane(plane, intersectPoint);
-    
-    if (hasIntersection) {
-      const T = new THREE.Vector3(cosTheta, 0, sinTheta);
-      const V = new THREE.Vector3(0, 1, 0);
-      
-      const diff = new THREE.Vector3().subVectors(intersectPoint, C);
-      const u = diff.dot(T);
-      const v = diff.dot(V);
-      
-      const W = card.width * scaleVal;
-      const H = card.height * scaleVal;
-      
-      if (Math.abs(u) <= W / 2.0 && Math.abs(v) <= H / 2.0) {
-        const distance = raycaster.ray.origin.distanceTo(intersectPoint);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestCard = card;
-        }
-      }
-    }
-  });
-  
-  if (closestCard) {
-    openZoom(closestCard.uniqueIndex);
   }
 }
 
@@ -1030,26 +1056,47 @@ function recalculateLayout() {
   const deltaTheta = (2.0 * Math.PI) / bp.cardsPerTurn;
   
   if (isMobile) {
-    // Mobile card sizing: target exactly 70% of visible viewport width
-    const visibleHeight = 2.0 * bp.cameraZ * Math.tan((bp.fov / 2.0) * Math.PI / 180.0);
-    const visibleWidth = visibleHeight * camera.aspect;
+    // Sizing mobile cards at their intended front depth
+    const frontZ = bp.radiusZ;
+    const distanceToFront = bp.cameraZ - frontZ;
+    
+    const visibleHeightAtFront = 2.0 * distanceToFront * Math.tan(THREE.MathUtils.degToRad(bp.fov * 0.5));
+    const visibleWidthAtFront = visibleHeightAtFront * camera.aspect;
     
     cardMeshes.forEach(card => {
-      // Clamp geometry aspect ratio on mobile to prevent extreme stretched proportions
+      // Clamp geometry aspect ratio on mobile
       const cardAspect = Math.max(0.8, Math.min(1.5, card.aspect));
-      const cardWidth = visibleWidth * bp.cardWidthScale;
-      const targetHeight = cardWidth / cardAspect;
+      
+      // Determine target width ratio by aspect category
+      let widthRatio = bp.squareWidthRatio; // default
+      if (card.aspect > 1.2) {
+        widthRatio = bp.landscapeWidthRatio; // landscape
+      } else if (card.aspect < 0.85) {
+        widthRatio = bp.portraitWidthRatio; // portrait
+      }
+      
+      let cardWidth = visibleWidthAtFront * widthRatio;
+      cardWidth = Math.min(cardWidth, visibleWidthAtFront * bp.maxScreenWidthRatio);
+      
+      let cardHeight = cardWidth / cardAspect;
+      
+      // Limit card height
+      if (cardHeight > visibleHeightAtFront * bp.maxScreenHeightRatio) {
+        cardHeight = visibleHeightAtFront * bp.maxScreenHeightRatio;
+        cardWidth = cardHeight * cardAspect;
+      }
       
       card.mesh.geometry.dispose();
-      card.mesh.geometry = new THREE.PlaneGeometry(cardWidth, targetHeight, 32, 1);
+      card.mesh.geometry = new THREE.PlaneGeometry(cardWidth, cardHeight, 32, 1);
       
       card.width = cardWidth;
-      card.height = targetHeight;
+      card.height = cardHeight;
       
-      // Update mobile uniforms
+      // Update mobile uniforms and disable GPU projection
       card.mesh.material.uniforms.uRadius.value = bp.radiusZ;
       card.mesh.material.uniforms.uAspect.value = cardAspect;
       card.mesh.material.uniforms.uImageAspect.value = card.aspect;
+      card.mesh.material.uniforms.uUseGPUTransform.value = 0.0;
     });
   } else {
     // Desktop and Tablet card sizing
@@ -1066,10 +1113,16 @@ function recalculateLayout() {
       card.width = cardWidth;
       card.height = targetHeight;
       
-      // Update desktop uniforms
+      // Reset standard Three.js transforms so GPU cylinder shader is the source of truth on desktop
+      card.mesh.position.set(0.0, 0.0, 0.0);
+      card.mesh.rotation.set(0.0, 0.0, 0.0);
+      card.mesh.scale.set(1.0, 1.0, 1.0);
+      
+      // Update desktop uniforms and enable GPU projection
       card.mesh.material.uniforms.uRadius.value = bp.radius;
       card.mesh.material.uniforms.uAspect.value = card.aspect;
       card.mesh.material.uniforms.uImageAspect.value = card.aspect;
+      card.mesh.material.uniforms.uUseGPUTransform.value = 1.0;
     });
   }
 }
@@ -1330,61 +1383,36 @@ function animate() {
     const baseTheta = i * deltaTheta;
     let thetaVal, xOffset, yVal, zVal, scaleVal, opacityVal, brightVal, blurVal;
     let bendVal = 1.0;
+    let finalRotY = 0.0;
+    let finalRotX = 0.0;
     
     if (isMobile) {
       card.mesh.visible = true;
       
-      let theta = baseTheta - mobileScrollAngle;
-      
-      // Calculate vertical position proportional to angle
-      let y = theta * pitchFactor;
-      
-      // Infinite wrapping modulo to keep Y in range [-L/2, L/2]
-      const halfL = L / 2.0;
-      y = ((y + halfL) % L);
-      if (y < 0.0) y += L;
-      y -= halfL;
-      
-      const wrappedTheta = y / pitchFactor;
-      const cosTheta = Math.cos(wrappedTheta);
-      const sinTheta = Math.sin(wrappedTheta);
+      const t = getMobileCardTransform(i, mobileScrollAngle);
       
       // Save wrapped vertical position on object for query
-      card.yWrapped = y;
+      card.yWrapped = t.y;
       
       // Track focus distance to center (y = 0)
-      const distToFocus = Math.abs(y);
+      const distToFocus = Math.abs(t.y);
       if (distToFocus < minFocusDist) {
         minFocusDist = distToFocus;
         newFocusedIndex = i;
       }
       
-      // Focus factor: Gaussian falloff based on vertical distance to center screen
-      const focusFactor = Math.exp(-Math.pow(y / bp.bendSpread, 2.0));
+      thetaVal = t.theta;
+      xOffset = t.x;
+      yVal = t.y;
+      zVal = t.z;
+      scaleVal = t.scale;
+      opacityVal = t.opacity;
+      brightVal = t.brightness;
+      blurVal = t.blur;
+      bendVal = t.bend;
       
-      // Depth factor: 1.0 at front (closest to camera), 0.0 at back (furthest)
-      const depthFactor = (cosTheta + 1.0) / 2.0;
-      
-      // Card size scaling based on depth and focus boost
-      scaleVal = (0.55 + 0.45 * depthFactor);
-      if (i === activeFocusedIndex) {
-        scaleVal *= (1.0 + (CONFIG.focusScale - 1.0) * focusFactor);
-      }
-      
-      // Opacity: front cards 1.0, back cards fading to 0.15
-      opacityVal = 0.15 + 0.85 * depthFactor;
-      
-      // Brightness: front cards bright, back cards dark
-      brightVal = (0.4 + 0.6 * depthFactor) * (1.0 + (CONFIG.focusBrightness - 1.0) * focusFactor);
-      
-      // Blur: front cards sharp, back cards soft
-      blurVal = 1.0 - depthFactor;
-      
-      // Elliptical helix positions
-      thetaVal = wrappedTheta;
-      xOffset = (bp.radiusX + bp.radiusZ) * sinTheta;
-      yVal = y;
-      zVal = 0.0;
+      finalRotY = t.rotationY;
+      finalRotX = t.rotationX;
     } else {
       card.mesh.visible = true;
       
@@ -1456,9 +1484,9 @@ function animate() {
       const targetTheta = 0.0;
       const targetY = 0.0;
       const targetZ = 4.8;
-      const targetZC = targetZ - bp.radiusZ; // Correct for Z-rendering offset: uZC + uRadius in vertex shader
       const targetXOffset = 0.0;
-      const targetBend = 0.0; // flat plane
+      const targetRotY = 0.0;
+      const targetRotX = 0.0;
       
       const distToCam = bp.cameraZ - targetZ;
       const visH = 2.0 * distToCam * Math.tan((bp.fov / 2.0) * Math.PI / 180.0);
@@ -1469,10 +1497,13 @@ function animate() {
       
       finalTheta = THREE.MathUtils.lerp(thetaVal, targetTheta, zoom);
       finalY = THREE.MathUtils.lerp(yVal, targetY, zoom);
-      finalZ = THREE.MathUtils.lerp(zVal, targetZC, zoom); // Lerp to corrected ZC coordinate
+      finalZ = THREE.MathUtils.lerp(zVal, targetZ, zoom);
       finalXOffset = THREE.MathUtils.lerp(xOffset, targetXOffset, zoom);
       finalBend = THREE.MathUtils.lerp(bendVal, targetBend, zoom);
       finalScale = THREE.MathUtils.lerp(scaleVal, targetScale, zoom);
+      
+      finalRotY = THREE.MathUtils.lerp(finalRotY, targetRotY, zoom);
+      finalRotX = THREE.MathUtils.lerp(finalRotX, targetRotX, zoom);
       
       finalOpacity = THREE.MathUtils.lerp(opacityVal, 1.0, zoom);
       finalBrightness = THREE.MathUtils.lerp(brightVal, 1.0, zoom);
@@ -1508,16 +1539,18 @@ function animate() {
       targetTiltY = mouse.x * CONFIG.maxHoverTiltY;
     }
     
-    // Mobile roll-deck rotation around X-axis for extra depth
-    if (isMobile) {
-      targetTiltX = THREE.MathUtils.lerp(-yVal * 0.08, 0.0, zoom);
-    }
-    
     card.tiltX += (targetTiltX - card.tiltX) * 0.08;
     card.tiltY += (targetTiltY - card.tiltY) * 0.08;
     
     uniforms.uTiltX.value = card.tiltX;
     uniforms.uTiltY.value = card.tiltY;
+    
+    // Apply transforms directly to standard mesh components on mobile (since GPU cylinder bending is bypassed)
+    if (isMobile) {
+      card.mesh.position.set(finalXOffset, finalY, finalZ);
+      card.mesh.rotation.set(finalRotX, finalRotY, 0.0);
+      card.mesh.scale.set(finalScale, finalScale, 1.0);
+    }
   });
   
   // 7. Update slide counter in footer if focus card shifted
