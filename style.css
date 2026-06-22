@@ -31,6 +31,7 @@ html, body {
   overflow-x: hidden;
   scrollbar-width: none; /* Hide scrollbar in Firefox */
   -ms-overflow-style: none; /* Hide scrollbar in IE/Edge */
+  overscroll-behavior: none; /* Prevent pull-to-refresh and bounce effects */
 }
 
 /* Hide scrollbar for Webkit browsers (Chrome, Safari, Opera, Edge) */
@@ -127,6 +128,7 @@ html, body {
   height: 100dvh;
   z-index: 0;
   pointer-events: auto;
+  touch-action: none; /* Prevent pull-to-refresh and default gestures on canvas touch */
 }
 
 /* UI Layout Wrapper */
@@ -1176,6 +1178,9 @@ a.info-value:hover {
 
 @media (max-width: 768px) {
   #scroll-container {
+    display: none;
+  }
+  .scroll-helper {
     display: none;
   }
   /* Layout adjustments */

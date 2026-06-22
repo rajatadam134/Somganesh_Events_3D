@@ -289,6 +289,7 @@ let driftDirection = 1; // 1 = down, -1 = up
 let mobileScrollAngle = 0;
 let mobileScrollVelocity = 0;
 let mobileIsDragging = false;
+let mobileLastTouchX = 0;
 let mobileLastTouchY = 0;
 let mobileLastTouchTime = 0;
 let mobileDragStartX = 0;
@@ -910,6 +911,7 @@ function handlePointerDown(e) {
   }
   
   mobileIsDragging = true;
+  mobileLastTouchX = e.clientX;
   mobileLastTouchY = e.clientY;
   mobileLastTouchTime = performance.now();
   mobileScrollVelocity = 0;
@@ -927,12 +929,15 @@ function handlePointerDown(e) {
 function handlePointerMove(e) {
   if (!isMobile || !mobileIsDragging) return;
   
+  const currentX = e.clientX;
   const currentY = e.clientY;
+  const deltaX = currentX - mobileLastTouchX;
   const deltaY = currentY - mobileLastTouchY;
+  mobileLastTouchX = currentX;
   mobileLastTouchY = currentY;
   
   const bp = CONFIG.breakpoints.mobile;
-  const scrollDelta = -deltaY * bp.dragSensitivity;
+  const scrollDelta = (deltaY - deltaX) * bp.dragSensitivity;
   mobileScrollAngle += scrollDelta;
   
   const now = performance.now();
