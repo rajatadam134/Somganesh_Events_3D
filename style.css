@@ -1335,38 +1335,51 @@ a.info-value:hover {
   #panel-contact .contact-content-body {
     display: flex;
     flex-direction: column;
-    gap: 22px;
-    margin-top: 15px !important;
-    margin-bottom: 10px;
+    gap: 12px !important; /* Tightened from 22px to avoid scrolling */
+    margin-top: 10px !important; /* Tightened from 15px */
+    margin-bottom: 5px !important;
     flex-grow: 0 !important;
     justify-content: flex-start !important;
   }
   
+  #panel-contact .panel-desc {
+    margin-bottom: 5px !important;
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+  }
+  
+  #panel-contact .panel-title {
+    font-size: 1.8rem !important;
+    margin-bottom: 8px !important;
+  }
+  
   #panel-contact .panel-info-block {
-    gap: 18px !important;
+    gap: 10px !important; /* Tightened from 18px */
+    margin-bottom: 5px !important;
   }
   
   #panel-contact .panel-info-row {
-    padding-bottom: 14px !important;
+    padding-bottom: 8px !important; /* Tightened from 14px */
+    gap: 2px !important;
   }
   
   #panel-contact .panel-info-row .info-label {
-    font-size: 0.8rem !important;
+    font-size: 0.75rem !important;
   }
   
   #panel-contact .panel-info-row .info-value {
-    font-size: 1.1rem !important;
+    font-size: 1rem !important;
   }
   
   #panel-contact .contact-cta-buttons {
-    gap: 14px !important;
-    margin-top: 15px !important;
+    gap: 8px !important; /* Tightened from 14px */
+    margin-top: 8px !important; /* Tightened from 15px */
   }
   
   #panel-contact .whatsapp-direct-btn,
   #panel-contact .instagram-direct-btn {
-    padding: 16px 24px !important;
-    font-size: 1rem !important;
+    padding: 12px 20px !important; /* Tightened button size */
+    font-size: 0.95rem !important;
   }
   
   /* Disable stuck hover effects on mobile touch screens */
@@ -1384,9 +1397,19 @@ a.info-value:hover {
     max-width: 100%;
   }
   
-  /* Tighten menu list margins to prevent footer overflow */
+  /* Center the menu links vertically and make them larger */
   .menu-links-container {
-    margin-top: 20px !important;
-    gap: 12px !important;
+    flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    margin-top: 0 !important;
+    gap: 25px !important; /* Balanced gap between large links */
+  }
+  
+  .menu-link-item {
+    font-size: 3.8rem !important; /* Increased font-size */
+    width: fit-content !important;
+    text-align: left !important;
   }
 }
