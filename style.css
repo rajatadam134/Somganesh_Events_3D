@@ -1163,7 +1163,7 @@ a.info-value:hover {
 
 .scroll-spacer {
   width: 100%;
-  height: 40000px; /* Tall height to support seamless infinite scrollbar warping */
+  height: 80000px; /* Tall height to support seamless infinite scrollbar warping */
 }
 
 /* Responsive adjustments */

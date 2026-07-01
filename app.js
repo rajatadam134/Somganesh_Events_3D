@@ -371,6 +371,9 @@ function init() {
     setupEvents();
     recalculateLayout();
     
+    // Pre-warm WebGL shaders and upload all textures to GPU to prevent runtime scroll jank
+    renderer.compile(scene, camera);
+    
     // Center the native scroll position on load
     const docHeight = document.documentElement.scrollHeight;
     const winHeight = window.innerHeight;
@@ -476,17 +479,26 @@ function buildGallery(loadedCards) {
   // Base height of cards in 3D units
   const cardHeight = isMobile ? 1.6 : 2.0;
   
-  // Duplicate loadedCards to get 32 cards for a rich 2-turn helix (32 cards, 16-card pitch)
+  // Duplicate loadedCards if needed to get at least 32 cards for a rich 2-turn helix
   const duplicatedCards = [];
-  while (duplicatedCards.length < 32) {
-    loadedCards.forEach((c) => {
-      if (duplicatedCards.length < 32) {
-        duplicatedCards.push({
-          ...c,
-          uniqueIndex: duplicatedCards.length
-        });
-      }
+  if (loadedCards.length >= 32) {
+    loadedCards.forEach((c, index) => {
+      duplicatedCards.push({
+        ...c,
+        uniqueIndex: index
+      });
     });
+  } else {
+    while (duplicatedCards.length < 32) {
+      loadedCards.forEach((c) => {
+        if (duplicatedCards.length < 32) {
+          duplicatedCards.push({
+            ...c,
+            uniqueIndex: duplicatedCards.length
+          });
+        }
+      });
+    }
   }
   
   duplicatedCards.forEach((cardData) => {
@@ -1578,8 +1590,11 @@ function animate() {
       card.mesh.position.set(finalXOffset, finalY, finalZ);
       card.mesh.rotation.set(finalRotX, finalRotY, 0.0);
       card.mesh.scale.set(finalScale, finalScale, 1.0);
-      card.mesh.visible = Math.abs(finalY) < 5.2 || zoom > 0.0;
     }
+    
+    // Apply vertical frustum culling on both desktop and mobile to optimize rendering performance
+    const cullLimit = yEdge + card.height;
+    card.mesh.visible = Math.abs(finalY) < cullLimit || zoom > 0.0;
   });
   
   // 7. Update slide counter in footer if focus card shifted
