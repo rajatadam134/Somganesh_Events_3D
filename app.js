@@ -144,8 +144,7 @@ const GALLERY_ITEMS = [
   { url: 'images/image_37.webp', title: 'Dusk Celebration', category: 'Lighting Design' },
   { url: 'images/image_38.webp', title: 'Sunset Vows', category: 'Garden Ceremony' },
   { url: 'images/image_39.webp', title: 'Velvet Elegance', category: 'VIP Lounge' },
-  { url: 'images/image_40.webp', title: 'Marigold Symphony', category: 'Traditional Haldi' },
-  { url: 'images/image_41.webp', title: 'Golden Hour Mandap', category: 'Mandap Curation' }
+  { url: 'images/image_40.webp', title: 'Golden Hour Mandap', category: 'Mandap Curation' }
 ];
 
 // --- SHADER DEFINITIONS ---
