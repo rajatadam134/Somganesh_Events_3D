@@ -127,7 +127,25 @@ const GALLERY_ITEMS = [
   { url: 'images/image_20.webp', title: 'Candlelit Pathway', category: 'Intimate Dinner' },
   { url: 'images/image_21.webp', title: 'Majestic Stage', category: 'Grand Celebration' },
   { url: 'images/image_22.webp', title: 'Royal Gateway', category: 'Entrance Decor' },
-  { url: 'images/image_23.webp', title: 'Starlight Banquet', category: 'Luxury Tent' }
+  { url: 'images/image_23.webp', title: 'Starlight Banquet', category: 'Luxury Tent' },
+  { url: 'images/image_24.webp', title: 'Royal Vivah', category: 'Mandap Decor' },
+  { url: 'images/image_25.webp', title: 'Golden Canopy Reception', category: 'Dinner Decor' },
+  { url: 'images/image_26.webp', title: 'Imperial Gateway', category: 'Entrance Showcase' },
+  { url: 'images/image_27.webp', title: 'Divine Deity Vivah', category: 'Mandap Decor' },
+  { url: 'images/image_28.webp', title: 'Chandelier Night', category: 'Stage Curation' },
+  { url: 'images/image_29.webp', title: 'Floral Cascade', category: 'Aisle Setup' },
+  { url: 'images/image_30.webp', title: 'Ethereal Lounge', category: 'Guest Lounge' },
+  { url: 'images/image_31.webp', title: 'Starry Night Gala', category: 'Outdoor Dinner' },
+  { url: 'images/image_32.webp', title: 'Vibrant Sangeet', category: 'Stage Design' },
+  { url: 'images/image_33.webp', title: 'Shimmering Backdrop', category: 'Photo Booth' },
+  { url: 'images/image_34.webp', title: 'Classic Monochromatic', category: 'Table Styling' },
+  { url: 'images/image_35.webp', title: 'Tropical Dream', category: 'Ceremony Arch' },
+  { url: 'images/image_36.webp', title: 'Crystal Chandelier', category: 'Ceiling Decor' },
+  { url: 'images/image_37.webp', title: 'Dusk Celebration', category: 'Lighting Design' },
+  { url: 'images/image_38.webp', title: 'Sunset Vows', category: 'Garden Ceremony' },
+  { url: 'images/image_39.webp', title: 'Velvet Elegance', category: 'VIP Lounge' },
+  { url: 'images/image_40.webp', title: 'Marigold Symphony', category: 'Traditional Haldi' },
+  { url: 'images/image_41.webp', title: 'Golden Hour Mandap', category: 'Mandap Curation' }
 ];
 
 // --- SHADER DEFINITIONS ---
