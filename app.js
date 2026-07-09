@@ -475,6 +475,12 @@ function loadAssets() {
 
 // --- BUILD GALLERY MESHES ---
 function buildGallery(loadedCards) {
+  // Prevent infinite loops if assets fail to load
+  if (!loadedCards || loadedCards.length === 0) {
+    console.error("No loaded cards to build gallery!");
+    return;
+  }
+
   // Base height of cards in 3D units
   const cardHeight = isMobile ? 1.6 : 2.0;
   
