@@ -901,10 +901,9 @@ function renderCuratedGrid() {
       <div class="grid-card-img-wrap">
         <img src="${item.url}" alt="${item.title}" loading="lazy">
       </div>
-      <div class="grid-card-body">
-        <span class="grid-card-cat">${item.categoryLabel || item.category}</span>
-        <h3 class="grid-card-title">${item.title}</h3>
-        <span class="grid-card-venue">${item.venue || 'Solapur, Maharashtra'}</span>
+      <div class="grid-card-overlay">
+        <span class="grid-card-overlay-cat">${item.categoryLabel || item.category}</span>
+        <h3 class="grid-card-overlay-title">${item.title}</h3>
       </div>
     `;
     
