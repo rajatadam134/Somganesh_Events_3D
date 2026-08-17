@@ -781,11 +781,43 @@ a.info-value:hover {
 /* Drawer Footer styling */
 .menu-drawer-footer {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  border-top: 1px solid rgba(18, 18, 20, 0.18);
+  padding-top: 18px;
+}
+
+.menu-footer-top {
+  display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  border-top: 1px solid rgba(18, 18, 20, 0.18);
-  padding-top: 20px;
+}
+
+.menu-footer-credits {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding-top: 2px;
+}
+
+.credits-author-link {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(18, 18, 20, 0.65) !important;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease, transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.credits-author-link:hover {
+  color: #8C6D23 !important;
+  transform: translateX(4px);
 }
 
 .menu-footer-email {
@@ -831,10 +863,10 @@ a.info-value:hover {
 }
 
 @media (max-width: 768px) {
-  .menu-drawer-footer {
+  .menu-footer-top {
     flex-direction: column;
     align-items: flex-start;
-    gap: 14px;
+    gap: 12px;
   }
 }
 
