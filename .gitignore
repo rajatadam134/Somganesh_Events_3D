@@ -1,3 +1,5 @@
-# Ignore local backup files and generated visual previews
+# Ignore local backup files and temporary artifacts
+_backup_*
+.impeccable/
 app_backup_*.js
 *-preview.png
