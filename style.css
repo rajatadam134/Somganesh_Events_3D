@@ -242,13 +242,16 @@ html, body {
 
 @media (max-width: 768px) {
   .menu-container {
-    top: 20px;
-    right: 20px;
+    top: 16px;
+    right: 16px;
     width: 110px;
   }
   .menu-container.opened {
-    width: calc(100vw - 40px);
-    height: calc(100svh - 40px);
+    width: calc(100vw - 32px);
+    height: auto;
+    max-height: 85svh;
+    top: 16px;
+    right: 16px;
   }
 }
 
@@ -1026,6 +1029,24 @@ a.info-value:hover {
 
 .total-slides {
   color: rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 768px) {
+  .gallery-counter {
+    position: fixed;
+    bottom: 74px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 45;
+    font-size: 0.85rem;
+    background: rgba(12, 12, 16, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 4px 14px;
+    border-radius: 20px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    pointer-events: none;
+  }
 }
 
 /* ==========================================================================
