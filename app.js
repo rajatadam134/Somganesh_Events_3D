@@ -585,9 +585,9 @@ function getMobileCardTransform(cardIndex, galleryPosition) {
   const pitchFactor = spacing / deltaTheta;
   const L = N * spacing;
   
-  // Base mathematical coordinates along the helix
-  const baseTheta = cardIndex * deltaTheta;
-  let theta = baseTheta - galleryPosition;
+  // Base mathematical coordinates along the helix: Card 1 placed below Card 0
+  const baseTheta = -cardIndex * deltaTheta;
+  let theta = baseTheta + galleryPosition;
   
   // Calculate vertical position proportional to angle
   let y = theta * pitchFactor;
