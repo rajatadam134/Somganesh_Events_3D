@@ -123,6 +123,7 @@ const GALLERY_ITEMS = [
   { url: 'images/image_15.webp', title: 'Ivory Floral Waterfall', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Silver Oak Lawns', desc: 'Suspended ceiling floral canopy with over 5,000 fresh white blooms.' },
   { url: 'images/image_16.webp', title: 'Celestial Star Stage', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'Crystal Banquet Solapur', desc: 'Multi-tiered grand stage for bride and groom reception with gold fretwork.' },
   { url: 'images/image_17.webp', title: 'Royal Gold Canopy', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Heritage Greens', desc: 'Custom gold dome canopy with ambient chandelier centerpiece.' },
+  { url: 'images/image_18.webp', title: 'Imperial Floral Gateway', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Solapur Grand Pavilion', desc: 'Monumental grand entrance gateway draped in cascading orchids and warm illumination.' },
   { url: 'images/image_19.webp', title: 'Lush Vivah Aisle', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Solapur Palms Resort', desc: 'Mirrored pathway flanked by elevated floral urns and pillar candles.' },
   { url: 'images/image_20.webp', title: 'Candlelit Pathway', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Vedic Garden Estate', desc: 'Intimate walkway lined with brass diyas leading to the ceremonial mandap.' },
   { url: 'images/image_21.webp', title: 'Majestic Royal Vivah', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Kalyan Mandapam Solapur', desc: 'Palatial entrance gateway reflecting classic Maharashtrian royal architecture.' },
@@ -704,23 +705,26 @@ function setupEvents() {
   container.addEventListener('pointercancel', handlePointerCancel);
   container.addEventListener('wheel', handleMobileWheel, { passive: false });
   
-  // Lightbox Close triggers
-  const lightboxClose = document.getElementById('lightbox-close');
-  const lightboxOverlay = document.getElementById('lightbox-overlay');
-  if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
-  if (lightboxOverlay) {
-    lightboxOverlay.addEventListener('click', () => {
-      closeLightbox();
-    });
-  }
-  
+  // WebGL Context loss & restore handling
+  const canvas = renderer.domElement;
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    console.warn('WebGL context lost. Pausing rendering.');
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+  }, false);
+
+  canvas.addEventListener('webglcontextrestored', () => {
+    console.log('WebGL context restored. Reinitializing scene.');
+    init();
+  }, false);
+
   // Mouse hover pointer scaling
   const hoverables = document.querySelectorAll('a, button, .submit-btn, .modal-close, .lightbox-close');
   const cursor = document.getElementById('custom-cursor');
   
   hoverables.forEach(el => {
-    el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
-    el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+    el.addEventListener('mouseenter', () => cursor && cursor.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cursor && cursor.classList.remove('hover'));
   });
 }
 

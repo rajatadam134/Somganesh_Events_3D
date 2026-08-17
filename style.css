@@ -98,6 +98,13 @@ html, body {
   opacity: 0;
 }
 
+@media (hover: none) and (pointer: coarse) {
+  .custom-cursor,
+  .cursor-dot {
+    display: none !important;
+  }
+}
+
 /* Three.js Canvas Container */
 #canvas-container {
   position: fixed;
