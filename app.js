@@ -106,45 +106,45 @@ function applyScrollDelta(delta, isTouch) {
 // 4. Update the `title` and `category` fields to display custom information in the UI focus panel.
 // 5. The spiral will automatically scale to support any number of images you add!
 const GALLERY_ITEMS = [
-  { url: 'images/image_1.webp', title: 'Floral Symphony', category: 'Grand Entrance' },
-  { url: 'images/image_2.webp', title: 'Whispering Pines', category: 'Outdoor Reception' },
-  { url: 'images/image_3.webp', title: 'Golden Hour Gala', category: 'Celebration' },
-  { url: 'images/image_4.webp', title: 'Crystal Elegance', category: 'Ballroom Decor' },
-  { url: 'images/image_5.webp', title: 'Ethereal Canopy', category: 'Wedding Altar' },
-  { url: 'images/image_6.webp', title: 'Botanical Arch', category: 'Garden Ceremony' },
-  { url: 'images/image_7.webp', title: 'Chandelier Dream', category: 'Luxury Stage' },
-  { url: 'images/image_8.webp', title: 'Monochromatic Chic', category: 'Minimalist Dinner' },
-  { url: 'images/image_9.webp', title: 'Sunset Lounge', category: 'Cabana Lounge' },
-  { url: 'images/image_10.webp', title: 'Luminous Night', category: 'Evening Banquet' },
-  { url: 'images/image_11.webp', title: 'Enchanted Forest', category: 'Theme Decor' },
-  { url: 'images/image_12.webp', title: 'Opulent Banquet', category: 'Rehearsal Dinner' },
-  { url: 'images/image_13.webp', title: 'Garden Splendor', category: 'Floral Arch' },
-  { url: 'images/image_14.webp', title: 'Sleek Reception', category: 'Modern Design' },
-  { url: 'images/image_15.webp', title: 'Ivory Whimsy', category: 'Ceiling Installation' },
-  { url: 'images/image_16.webp', title: 'Celestial Night', category: 'Reception Stage' },
-  { url: 'images/image_17.webp', title: 'Golden Canopy', category: 'Dinner Decor' },
-  { url: 'images/image_19.webp', title: 'Lush Meadows', category: 'Aisle Florals' },
-  { url: 'images/image_20.webp', title: 'Candlelit Pathway', category: 'Intimate Dinner' },
-  { url: 'images/image_21.webp', title: 'Majestic Stage', category: 'Grand Celebration' },
-  { url: 'images/image_22.webp', title: 'Royal Gateway', category: 'Entrance Decor' },
-  { url: 'images/image_23.webp', title: 'Starlight Banquet', category: 'Luxury Tent' },
-  { url: 'images/image_24.webp', title: 'Royal Vivah', category: 'Mandap Decor' },
-  { url: 'images/image_25.webp', title: 'Golden Canopy Reception', category: 'Dinner Decor' },
-  { url: 'images/image_26.webp', title: 'Imperial Gateway', category: 'Entrance Showcase' },
-  { url: 'images/image_27.webp', title: 'Divine Deity Vivah', category: 'Mandap Decor' },
-  { url: 'images/image_28.webp', title: 'Chandelier Night', category: 'Stage Curation' },
-  { url: 'images/image_29.webp', title: 'Floral Cascade', category: 'Aisle Setup' },
-  { url: 'images/image_30.webp', title: 'Ethereal Lounge', category: 'Guest Lounge' },
-  { url: 'images/image_31.webp', title: 'Starry Night Gala', category: 'Outdoor Dinner' },
-  { url: 'images/image_32.webp', title: 'Vibrant Sangeet', category: 'Stage Design' },
-  { url: 'images/image_33.webp', title: 'Shimmering Backdrop', category: 'Photo Booth' },
-  { url: 'images/image_34.webp', title: 'Classic Monochromatic', category: 'Table Styling' },
-  { url: 'images/image_35.webp', title: 'Tropical Dream', category: 'Ceremony Arch' },
-  { url: 'images/image_36.webp', title: 'Crystal Chandelier', category: 'Ceiling Decor' },
-  { url: 'images/image_37.webp', title: 'Dusk Celebration', category: 'Lighting Design' },
-  { url: 'images/image_38.webp', title: 'Sunset Vows', category: 'Garden Ceremony' },
-  { url: 'images/image_39.webp', title: 'Velvet Elegance', category: 'VIP Lounge' },
-  { url: 'images/image_40.webp', title: 'Golden Hour Mandap', category: 'Mandap Curation' }
+  { url: 'images/image_1.webp', title: 'Grand Floral Archway', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Solapur Palace Grounds', desc: 'Bespoke hand-crafted floral gateway with royal marigold and jasmine draping.' },
+  { url: 'images/image_2.webp', title: 'Whispering Pines Reception', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'Balaji Lawns, Solapur', desc: 'Sleek geometric stage installation paired with ambient warm amber lighting.' },
+  { url: 'images/image_3.webp', title: 'Golden Hour Royal Vivah', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Heritage Haveli Resort', desc: 'Monumental traditional wedding mandap with gold pillars and brass lamps.' },
+  { url: 'images/image_4.webp', title: 'Crystal Elegance Ballroom', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'Grand Imperial Hall', desc: 'Cascading crystal chandelier canopy and panoramic stage scenography.' },
+  { url: 'images/image_5.webp', title: 'Ethereal Vedic Canopy', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Riverside Lawns', desc: 'Sacred four-pillar Vedic mandap enriched with fresh tuberose and lotus florals.' },
+  { url: 'images/image_6.webp', title: 'Botanical Heritage Arch', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Solapur Club Pavilion', desc: 'Curved botanical installation framing ceremonial vows with fragrant roses.' },
+  { url: 'images/image_7.webp', title: 'Chandelier Sangeet Stage', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'Hotel City Park, Solapur', desc: 'High-energy illuminated concert stage for grand Sangeet musical celebrations.' },
+  { url: 'images/image_8.webp', title: 'Minimalist Royal Dinner', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Royal Orchid Greens', desc: 'Candlelit long-table banquet arrangement with custom gold cutlery styling.' },
+  { url: 'images/image_9.webp', title: 'Cabana VIP Sunset Lounge', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Lakeview Estate', desc: 'Curated luxury cabana setup for intimate pre-wedding hospitality.' },
+  { url: 'images/image_10.webp', title: 'Luminous Reception Night', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'Solapur Convention Center', desc: 'Architectural LED backdrop integrated with classical floral pillars.' },
+  { url: 'images/image_11.webp', title: 'Enchanted Forest Vivah', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Pristine Meadows Lawns', desc: 'Fairy-light canopy woven through tall botanical trees for twilight nuptials.' },
+  { url: 'images/image_12.webp', title: 'Opulent Vivah Feast', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Maharaja Grand Pavilion', desc: 'Traditional banquet styling with brass urlis, marigolds, and silk drapes.' },
+  { url: 'images/image_13.webp', title: 'Golden Temple Mandap', category: 'deity', categoryLabel: 'Divine Deities', venue: 'Siddheshwar Enclave', desc: 'Sacred temple-style gold mandap backdrop created for traditional rituals.' },
+  { url: 'images/image_14.webp', title: 'Modern Reception Lounge', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'Solapur Heights Resort', desc: 'Contemporary minimalist staging with warm filament glow and velvet accents.' },
+  { url: 'images/image_15.webp', title: 'Ivory Floral Waterfall', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Silver Oak Lawns', desc: 'Suspended ceiling floral canopy with over 5,000 fresh white blooms.' },
+  { url: 'images/image_16.webp', title: 'Celestial Star Stage', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'Crystal Banquet Solapur', desc: 'Multi-tiered grand stage for bride and groom reception with gold fretwork.' },
+  { url: 'images/image_17.webp', title: 'Royal Gold Canopy', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Heritage Greens', desc: 'Custom gold dome canopy with ambient chandelier centerpiece.' },
+  { url: 'images/image_19.webp', title: 'Lush Vivah Aisle', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Solapur Palms Resort', desc: 'Mirrored pathway flanked by elevated floral urns and pillar candles.' },
+  { url: 'images/image_20.webp', title: 'Candlelit Pathway', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Vedic Garden Estate', desc: 'Intimate walkway lined with brass diyas leading to the ceremonial mandap.' },
+  { url: 'images/image_21.webp', title: 'Majestic Royal Vivah', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Kalyan Mandapam Solapur', desc: 'Palatial entrance gateway reflecting classic Maharashtrian royal architecture.' },
+  { url: 'images/image_22.webp', title: 'Imperial Gateway Arch', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Grand Horizon Lawns', desc: 'Double-arch floral structure with cascading wisteria and crystal droplets.' },
+  { url: 'images/image_23.webp', title: 'Starlight Banquet Tent', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'Royal Palms Resort', desc: 'Clear-roof German hangar tent transformed into a starlit night sky.' },
+  { url: 'images/image_24.webp', title: 'Traditional Vivah Mandap', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Mahalaxmi Hall Solapur', desc: 'Carved temple pillars with sacred kalash accents and fresh marigolds.' },
+  { url: 'images/image_25.webp', title: 'Golden Sangeet Scenography', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'Hotel Balaji Sarovar', desc: 'Gilded mirror stage with dynamic concert lighting and custom stage wings.' },
+  { url: 'images/image_26.webp', title: 'Imperial Vivah Pavilion', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Grand Solapur Greens', desc: 'Monumental 60-foot royal pavilion designed for high-profile wedding receptions.' },
+  { url: 'images/image_27.webp', title: 'Divine Deity Decor', category: 'deity', categoryLabel: 'Divine Deities', venue: 'Siddheshwar Temple Trust', desc: 'Exquisite sacred decor crafted for Ganeshotsav and temple celebrations.' },
+  { url: 'images/image_28.webp', title: 'Chandelier Vivah Hall', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Solapur Club Grand Ballroom', desc: 'Regal indoor wedding hall curation with velvet drapes and warm mood lighting.' },
+  { url: 'images/image_29.webp', title: 'Floral Cascade Aisle', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Green Valley Lawns', desc: 'Curved rose aisle designed for bride entry with cold pyro integration.' },
+  { url: 'images/image_30.webp', title: 'Ethereal VIP Lounge', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'Sunrise Pavilion', desc: 'Customized family lounge with tufted sofas and bespoke centerpiece florals.' },
+  { url: 'images/image_31.webp', title: 'Starry Night Gala', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'Hilltop Resort Lawns', desc: 'Open-air gala reception featuring 20,000 micro fairy lights and gold podium.' },
+  { url: 'images/image_32.webp', title: 'Vibrant Sangeet Stage', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'City Sports Club Ground', desc: 'Vibrant kaleidoscope theme stage designed for high-energy dance performances.' },
+  { url: 'images/image_33.webp', title: 'Shimmering Vivah Backdrop', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Heritage Palace Solapur', desc: 'Sequined shimmer wall with floral monogram for bride and groom photo moments.' },
+  { url: 'images/image_34.webp', title: 'Classic Monochromatic Banquet', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Elite Club Dining Hall', desc: 'All-white luxury banquet with calla lilies, glassware, and silver candelabras.' },
+  { url: 'images/image_35.webp', title: 'Tropical Mandap Arch', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Riverfront Resort', desc: 'Exotic tropical foliage and orchids sculpted into an organic ceremony altar.' },
+  { url: 'images/image_36.webp', title: 'Crystal Chandelier Ceiling', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'Diamond Banquet Hall', desc: 'Breathtaking ceiling grid suspending 48 handcrafted Bohemian chandeliers.' },
+  { url: 'images/image_37.webp', title: 'Dusk Vivah Illumination', category: 'vivah', categoryLabel: 'Royal Vivah', venue: 'Sunset Lawns Solapur', desc: 'Warm dusk lighting design accentuating mandap architecture against the twilight.' },
+  { url: 'images/image_38.webp', title: 'Sunset Vows Altar', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Lakeview Greens', desc: 'Open-sky circular mandap set against the picturesque water reservoir backdrop.' },
+  { url: 'images/image_39.webp', title: 'Velvet Royal Lounge', category: 'stage', categoryLabel: 'Stage & Reception', venue: 'Imperial Suite Pavilion', desc: 'Emerald green and gold velvet luxury lounge setting for family dignitaries.' },
+  { url: 'images/image_40.webp', title: 'Golden Hour Mandap', category: 'mandap', categoryLabel: 'Mandap Decor', venue: 'Solapur Heritage Enclave', desc: 'Grand signature mandap combining authentic Vedic rituals with modern luxury aesthetics.' }
 ];
 
 // --- SHADER DEFINITIONS ---
@@ -461,6 +461,10 @@ function loadAssets() {
           aspect,
           title: item.title,
           category: item.category,
+          categoryLabel: item.categoryLabel || item.category,
+          venue: item.venue || 'Solapur, Maharashtra',
+          desc: item.desc || '',
+          url: item.url,
           index
         });
       }, undefined, () => {
@@ -549,6 +553,10 @@ function buildGallery(loadedCards) {
       aspect: cardData.aspect,
       title: cardData.title,
       category: cardData.category,
+      categoryLabel: cardData.categoryLabel,
+      venue: cardData.venue,
+      desc: cardData.desc,
+      url: cardData.url,
       baseIndex: cardData.uniqueIndex % loadedCards.length,
       uniqueIndex: cardData.uniqueIndex,
       zoomProgress: 0.0,
@@ -562,6 +570,9 @@ function buildGallery(loadedCards) {
   
   // Calculate the correct visual scale of the images to fit the viewport perfectly
   recalculateLayout();
+  
+  // Build 2D Curated Editorial Grid
+  renderCuratedGrid();
 }
 
 // --- MOBILE HELIX POSITION TRANSFORM HELPER ---
@@ -741,6 +752,15 @@ function handleCanvasClick(e) {
   const visibleHeight = 2.0 * cameraZ * Math.tan((CONFIG.fov / 2.0) * Math.PI / 180.0);
   const visibleWidth = visibleHeight * camera.aspect;
   const yEdge = visibleHeight / 2.0;
+
+  // Reusable scratch objects to eliminate GC allocations
+  const scratchC = new THREE.Vector3();
+  const scratchN = new THREE.Vector3();
+  const scratchPlane = new THREE.Plane();
+  const scratchIntersect = new THREE.Vector3();
+  const scratchT = new THREE.Vector3();
+  const scratchV = new THREE.Vector3(0, 1, 0);
+  const scratchDiff = new THREE.Vector3();
   
   cardMeshes.forEach((card, i) => {
     // Reconstruct exact center position and normal orientation of each card
@@ -773,32 +793,29 @@ function handleCanvasClick(e) {
     // Center point in world space
     const cx_val = xPath;
     const cz_val = zVal + radius * Math.cos(thetaVal);
-    const C = new THREE.Vector3(cx_val, cy, cz_val);
+    scratchC.set(cx_val, cy, cz_val);
     
     // Normal vector at the center of the card
-    const N = new THREE.Vector3(-Math.sin(thetaVal), 0, Math.cos(thetaVal));
+    scratchN.set(-Math.sin(thetaVal), 0, Math.cos(thetaVal));
     
     // Define the card's flat tangent plane
-    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(N, C);
+    scratchPlane.setFromNormalAndCoplanarPoint(scratchN, scratchC);
     
-    const intersectPoint = new THREE.Vector3();
-    const hasIntersection = raycaster.ray.intersectPlane(plane, intersectPoint);
+    const hasIntersection = raycaster.ray.intersectPlane(scratchPlane, scratchIntersect);
     
     if (hasIntersection) {
       // Calculate local basis coordinates (U, V) on the card plane
-      const T = new THREE.Vector3(Math.cos(wrappedTheta), 0, Math.sin(wrappedTheta));
-      const V = new THREE.Vector3(0, 1, 0);
-      
-      const diff = new THREE.Vector3().subVectors(intersectPoint, C);
-      const u = diff.dot(T);
-      const v = diff.dot(V);
+      scratchT.set(Math.cos(wrappedTheta), 0, Math.sin(wrappedTheta));
+      scratchDiff.subVectors(scratchIntersect, scratchC);
+      const u = scratchDiff.dot(scratchT);
+      const v = scratchDiff.dot(scratchV);
       
       const W = card.width * scaleVal;
       const H = card.height * scaleVal;
       
       // Check if intersection point lies within the boundaries of the card
       if (Math.abs(u) <= W / 2.0 && Math.abs(v) <= H / 2.0) {
-        const distance = raycaster.ray.origin.distanceTo(intersectPoint);
+        const distance = raycaster.ray.origin.distanceTo(scratchIntersect);
         if (distance < minDistance) {
           minDistance = distance;
           closestCard = card;
@@ -808,27 +825,159 @@ function handleCanvasClick(e) {
   });
   
   if (closestCard) {
-    const src = closestCard.mesh.material.uniforms.uTexture.value.image.src;
-    openLightbox(src);
+    openLightboxByIndex(closestCard.baseIndex);
   }
 }
 
-function openLightbox(src) {
+// --- STATE MANAGEMENT FOR FILTERS & LIGHTBOX ---
+let activeCategory = 'all';
+let currentLightboxIndex = 0;
+let isGridViewActive = false;
+
+// --- LUXURY EVENT STORY LIGHTBOX CONTROLLER ---
+function openLightboxByIndex(itemIndex) {
+  if (itemIndex < 0 || itemIndex >= GALLERY_ITEMS.length) return;
+  currentLightboxIndex = itemIndex;
+  const item = GALLERY_ITEMS[itemIndex];
+  
   const overlay = document.getElementById('lightbox-overlay');
   const img = document.getElementById('lightbox-img');
+  const titleEl = document.getElementById('lightbox-title');
+  const catBadge = document.getElementById('lightbox-category-badge');
+  const venueBadge = document.getElementById('lightbox-venue-badge');
+  const descEl = document.getElementById('lightbox-desc');
+  const whatsappBtn = document.getElementById('lightbox-whatsapp-btn');
+  const customCursor = document.getElementById('custom-cursor');
+  
   if (overlay && img) {
-    img.src = src;
+    img.src = item.url;
+    if (titleEl) titleEl.innerText = item.title;
+    if (catBadge) catBadge.innerText = item.categoryLabel || item.category;
+    if (venueBadge) venueBadge.innerText = item.venue || 'Solapur, Maharashtra';
+    if (descEl) descEl.innerText = item.desc || 'Custom bespoke design and production curated for luxury celebrations.';
+    
+    if (whatsappBtn) {
+      const msg = encodeURIComponent(`Hello Somganesh Events, I am inquiring about booking decor for: "${item.title}" (${item.categoryLabel || item.category}) at ${item.venue || 'Solapur'}.`);
+      whatsappBtn.href = `https://wa.me/918983908135?text=${msg}`;
+    }
+    
     overlay.classList.add('active');
-    document.getElementById('custom-cursor').classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+    if (customCursor) customCursor.classList.add('hidden');
   }
 }
 
 function closeLightbox() {
   const overlay = document.getElementById('lightbox-overlay');
+  const customCursor = document.getElementById('custom-cursor');
   if (overlay) {
     overlay.classList.remove('active');
-    document.getElementById('custom-cursor').classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
+    if (customCursor) customCursor.classList.remove('hidden');
   }
+}
+
+function lightboxNext() {
+  let nextIdx = (currentLightboxIndex + 1) % GALLERY_ITEMS.length;
+  if (activeCategory !== 'all') {
+    const matchingIndices = GALLERY_ITEMS.map((item, idx) => item.category === activeCategory ? idx : -1).filter(idx => idx !== -1);
+    if (matchingIndices.length > 0) {
+      const currentPos = matchingIndices.indexOf(currentLightboxIndex);
+      const nextPos = (currentPos + 1) % matchingIndices.length;
+      nextIdx = matchingIndices[nextPos];
+    }
+  }
+  openLightboxByIndex(nextIdx);
+}
+
+function lightboxPrev() {
+  let prevIdx = (currentLightboxIndex - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length;
+  if (activeCategory !== 'all') {
+    const matchingIndices = GALLERY_ITEMS.map((item, idx) => item.category === activeCategory ? idx : -1).filter(idx => idx !== -1);
+    if (matchingIndices.length > 0) {
+      const currentPos = matchingIndices.indexOf(currentLightboxIndex);
+      const prevPos = (currentPos - 1 + matchingIndices.length) % matchingIndices.length;
+      prevIdx = matchingIndices[prevPos];
+    }
+  }
+  openLightboxByIndex(prevIdx);
+}
+
+// --- 2D CURATED EDITORIAL GRID CONTROLLER ---
+function renderCuratedGrid() {
+  const container = document.getElementById('grid-view-masonry');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  const filtered = activeCategory === 'all' 
+    ? GALLERY_ITEMS 
+    : GALLERY_ITEMS.filter(item => item.category === activeCategory);
+    
+  filtered.forEach((item) => {
+    const origIndex = GALLERY_ITEMS.indexOf(item);
+    const card = document.createElement('div');
+    card.className = 'grid-card';
+    card.setAttribute('data-index', origIndex);
+    card.innerHTML = `
+      <div class="grid-card-img-wrap">
+        <img src="${item.url}" alt="${item.title}" loading="lazy">
+      </div>
+      <div class="grid-card-body">
+        <span class="grid-card-cat">${item.categoryLabel || item.category}</span>
+        <h3 class="grid-card-title">${item.title}</h3>
+        <span class="grid-card-venue">${item.venue || 'Solapur, Maharashtra'}</span>
+      </div>
+    `;
+    
+    card.addEventListener('click', () => {
+      openLightboxByIndex(origIndex);
+    });
+    
+    container.appendChild(card);
+  });
+}
+
+function setViewMode(mode) {
+  const gridOverlay = document.getElementById('grid-view-overlay');
+  const btn3d = document.getElementById('view-btn-3d');
+  const btnGrid = document.getElementById('view-btn-grid');
+  
+  if (mode === 'grid') {
+    isGridViewActive = true;
+    if (gridOverlay) {
+      gridOverlay.classList.add('active');
+      gridOverlay.setAttribute('aria-hidden', 'false');
+    }
+    if (btnGrid) btnGrid.classList.add('active');
+    if (btn3d) btn3d.classList.remove('active');
+  } else {
+    isGridViewActive = false;
+    if (gridOverlay) {
+      gridOverlay.classList.remove('active');
+      gridOverlay.setAttribute('aria-hidden', 'true');
+    }
+    if (btn3d) btn3d.classList.add('active');
+    if (btnGrid) btnGrid.classList.remove('active');
+  }
+}
+
+function setCategoryFilter(category) {
+  activeCategory = category;
+  
+  // Update filter pill UI states
+  const pills = document.querySelectorAll('.filter-pill');
+  pills.forEach(pill => {
+    if (pill.getAttribute('data-category') === category) {
+      pill.classList.add('active');
+      pill.setAttribute('aria-selected', 'true');
+    } else {
+      pill.classList.remove('active');
+      pill.setAttribute('aria-selected', 'false');
+    }
+  });
+  
+  // Refresh 2D Grid
+  renderCuratedGrid();
 }
 
 // --- MOBILE 3D INLINE ZOOM FUNCTIONS ---
@@ -1385,21 +1534,21 @@ function animate() {
     particlesPoints.geometry.attributes.position.needsUpdate = true;
   }
   
-  // 2. Cursor Trailer Easing (skip on mobile)
+  // 2. Cursor Trailer Easing (skip on mobile, use cached values to avoid DOM layout thrashing)
   if (!isMobile) {
     const cursor = document.getElementById('custom-cursor');
     const dot = document.getElementById('cursor-dot');
     
     if (cursor && dot) {
-      const currentLeft = parseFloat(cursor.style.left) || 0;
-      const currentTop = parseFloat(cursor.style.top) || 0;
-      cursor.style.left = `${currentLeft + (mouse.targetX - currentLeft) * 0.15}px`;
-      cursor.style.top = `${currentTop + (mouse.targetY - currentTop) * 0.15}px`;
+      cursorCurrentX += (mouse.targetX - cursorCurrentX) * 0.15;
+      cursorCurrentY += (mouse.targetY - cursorCurrentY) * 0.15;
+      cursor.style.left = `${cursorCurrentX}px`;
+      cursor.style.top = `${cursorCurrentY}px`;
       
-      const currentDotLeft = parseFloat(dot.style.left) || 0;
-      const currentDotTop = parseFloat(dot.style.top) || 0;
-      dot.style.left = `${currentDotLeft + (mouse.targetX - currentDotLeft) * 0.3}px`;
-      dot.style.top = `${currentDotTop + (mouse.targetY - currentDotTop) * 0.3}px`;
+      dotCurrentX += (mouse.targetX - dotCurrentX) * 0.3;
+      dotCurrentY += (mouse.targetY - dotCurrentY) * 0.3;
+      dot.style.left = `${dotCurrentX}px`;
+      dot.style.top = `${dotCurrentY}px`;
     }
   }
   
@@ -1524,6 +1673,13 @@ function animate() {
     let finalBrightness = brightVal;
     let finalBlur = blurVal;
     
+    // Category filter dimming (keeps helical spiral geometry and alignment 100% intact)
+    if (activeCategory !== 'all' && card.category !== activeCategory) {
+      finalOpacity *= 0.15;
+      finalBrightness *= 0.6;
+      finalBlur = Math.max(finalBlur, 0.65);
+    }
+    
     if (isMobile && zoom > 0.0) {
       const targetTheta = 0.0;
       const targetY = 0.0;
@@ -1612,6 +1768,12 @@ function animate() {
   renderer.render(scene, camera);
 }
 
+// Variables for cached cursor coordinates
+let cursorCurrentX = window.innerWidth / 2;
+let cursorCurrentY = window.innerHeight / 2;
+let dotCurrentX = window.innerWidth / 2;
+let dotCurrentY = window.innerHeight / 2;
+
 // --- UPDATE FOCUS UI ---
 function updateFocusUI(card) {
   // Update slide counter in footer
@@ -1628,5 +1790,123 @@ function updateFocusUI(card) {
   }
 }
 
-// --- KICKSTART SCENE ---
-window.addEventListener('DOMContentLoaded', init);
+// --- INITIALIZE GALLERY CONTROLS & LISTENERS ---
+function initGalleryControls() {
+  // Filter Pills Click Handlers
+  const filterPills = document.querySelectorAll('.filter-pill');
+  filterPills.forEach(pill => {
+    pill.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const cat = pill.getAttribute('data-category');
+      if (cat) {
+        setCategoryFilter(cat);
+      }
+    });
+  });
+  
+  // View Mode Switch Buttons
+  const btn3d = document.getElementById('view-btn-3d');
+  const btnGrid = document.getElementById('view-btn-grid');
+  const gridCloseBtn = document.getElementById('grid-close-btn');
+  
+  if (btn3d) {
+    btn3d.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setViewMode('3d');
+    });
+  }
+  
+  if (btnGrid) {
+    btnGrid.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setViewMode('grid');
+    });
+  }
+  
+  if (gridCloseBtn) {
+    gridCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setViewMode('3d');
+    });
+  }
+  
+  // Lightbox Navigation & Action Handlers
+  const lightboxOverlay = document.getElementById('lightbox-overlay');
+  const lightboxCloseBtn = document.getElementById('lightbox-close');
+  const lightboxPrevBtn = document.getElementById('lightbox-prev-btn');
+  const lightboxNextBtn = document.getElementById('lightbox-next-btn');
+  
+  if (lightboxCloseBtn) {
+    lightboxCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeLightbox();
+    });
+  }
+  
+  if (lightboxPrevBtn) {
+    lightboxPrevBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      lightboxPrev();
+    });
+  }
+  
+  if (lightboxNextBtn) {
+    lightboxNextBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      lightboxNext();
+    });
+  }
+  
+  if (lightboxOverlay) {
+    lightboxOverlay.addEventListener('click', (e) => {
+      if (e.target === lightboxOverlay) {
+        closeLightbox();
+      }
+    });
+  }
+  
+  // Keyboard Accessibility Controls (Arrows & Esc)
+  window.addEventListener('keydown', (e) => {
+    if (lightboxOverlay && lightboxOverlay.classList.contains('active')) {
+      if (e.key === 'Escape') {
+        closeLightbox();
+      } else if (e.key === 'ArrowRight') {
+        lightboxNext();
+      } else if (e.key === 'ArrowLeft') {
+        lightboxPrev();
+      }
+    } else if (isGridViewActive) {
+      if (e.key === 'Escape') {
+        setViewMode('3d');
+      }
+    }
+  });
+  
+  // Touch Swipe on Lightbox for Mobile
+  let touchStartX = 0;
+  let touchEndX = 0;
+  
+  if (lightboxOverlay) {
+    lightboxOverlay.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    
+    lightboxOverlay.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      const diffX = touchEndX - touchStartX;
+      if (Math.abs(diffX) > 45) {
+        if (diffX < 0) {
+          lightboxNext();
+        } else {
+          lightboxPrev();
+        }
+      }
+    }, { passive: true });
+  }
+}
+
+// Add initGalleryControls call into DOMContentLoaded
+window.addEventListener('DOMContentLoaded', () => {
+  init();
+  initGalleryControls();
+});
