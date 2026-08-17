@@ -878,28 +878,12 @@ function closeLightbox() {
 }
 
 function lightboxNext() {
-  let nextIdx = (currentLightboxIndex + 1) % GALLERY_ITEMS.length;
-  if (activeCategory !== 'all') {
-    const matchingIndices = GALLERY_ITEMS.map((item, idx) => item.category === activeCategory ? idx : -1).filter(idx => idx !== -1);
-    if (matchingIndices.length > 0) {
-      const currentPos = matchingIndices.indexOf(currentLightboxIndex);
-      const nextPos = (currentPos + 1) % matchingIndices.length;
-      nextIdx = matchingIndices[nextPos];
-    }
-  }
+  const nextIdx = (currentLightboxIndex + 1) % GALLERY_ITEMS.length;
   openLightboxByIndex(nextIdx);
 }
 
 function lightboxPrev() {
-  let prevIdx = (currentLightboxIndex - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length;
-  if (activeCategory !== 'all') {
-    const matchingIndices = GALLERY_ITEMS.map((item, idx) => item.category === activeCategory ? idx : -1).filter(idx => idx !== -1);
-    if (matchingIndices.length > 0) {
-      const currentPos = matchingIndices.indexOf(currentLightboxIndex);
-      const prevPos = (currentPos - 1 + matchingIndices.length) % matchingIndices.length;
-      prevIdx = matchingIndices[prevPos];
-    }
-  }
+  const prevIdx = (currentLightboxIndex - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length;
   openLightboxByIndex(prevIdx);
 }
 
@@ -909,12 +893,7 @@ function renderCuratedGrid() {
   if (!container) return;
   
   container.innerHTML = '';
-  const filtered = activeCategory === 'all' 
-    ? GALLERY_ITEMS 
-    : GALLERY_ITEMS.filter(item => item.category === activeCategory);
-    
-  filtered.forEach((item) => {
-    const origIndex = GALLERY_ITEMS.indexOf(item);
+  GALLERY_ITEMS.forEach((item, origIndex) => {
     const card = document.createElement('div');
     card.className = 'grid-card';
     card.setAttribute('data-index', origIndex);
@@ -959,25 +938,6 @@ function setViewMode(mode) {
     if (btn3d) btn3d.classList.add('active');
     if (btnGrid) btnGrid.classList.remove('active');
   }
-}
-
-function setCategoryFilter(category) {
-  activeCategory = category;
-  
-  // Update filter pill UI states
-  const pills = document.querySelectorAll('.filter-pill');
-  pills.forEach(pill => {
-    if (pill.getAttribute('data-category') === category) {
-      pill.classList.add('active');
-      pill.setAttribute('aria-selected', 'true');
-    } else {
-      pill.classList.remove('active');
-      pill.setAttribute('aria-selected', 'false');
-    }
-  });
-  
-  // Refresh 2D Grid
-  renderCuratedGrid();
 }
 
 // --- MOBILE 3D INLINE ZOOM FUNCTIONS ---
@@ -1673,13 +1633,6 @@ function animate() {
     let finalBrightness = brightVal;
     let finalBlur = blurVal;
     
-    // Category filter dimming (keeps helical spiral geometry and alignment 100% intact)
-    if (activeCategory !== 'all' && card.category !== activeCategory) {
-      finalOpacity *= 0.15;
-      finalBrightness *= 0.6;
-      finalBlur = Math.max(finalBlur, 0.65);
-    }
-    
     if (isMobile && zoom > 0.0) {
       const targetTheta = 0.0;
       const targetY = 0.0;
@@ -1792,19 +1745,7 @@ function updateFocusUI(card) {
 
 // --- INITIALIZE GALLERY CONTROLS & LISTENERS ---
 function initGalleryControls() {
-  // Filter Pills Click Handlers
-  const filterPills = document.querySelectorAll('.filter-pill');
-  filterPills.forEach(pill => {
-    pill.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const cat = pill.getAttribute('data-category');
-      if (cat) {
-        setCategoryFilter(cat);
-      }
-    });
-  });
-  
-  // View Mode Switch Buttons
+  // View Mode Switch Buttons (Orbit 3D & The Vault)
   const btn3d = document.getElementById('view-btn-3d');
   const btnGrid = document.getElementById('view-btn-grid');
   const gridCloseBtn = document.getElementById('grid-close-btn');
