@@ -917,8 +917,6 @@ function renderCuratedGrid() {
 
 function setViewMode(mode) {
   const gridOverlay = document.getElementById('grid-view-overlay');
-  const btn3d = document.getElementById('view-btn-3d');
-  const btnGrid = document.getElementById('view-btn-grid');
   
   if (mode === 'grid') {
     isGridViewActive = true;
@@ -926,16 +924,12 @@ function setViewMode(mode) {
       gridOverlay.classList.add('active');
       gridOverlay.setAttribute('aria-hidden', 'false');
     }
-    if (btnGrid) btnGrid.classList.add('active');
-    if (btn3d) btn3d.classList.remove('active');
   } else {
     isGridViewActive = false;
     if (gridOverlay) {
       gridOverlay.classList.remove('active');
       gridOverlay.setAttribute('aria-hidden', 'true');
     }
-    if (btn3d) btn3d.classList.add('active');
-    if (btnGrid) btnGrid.classList.remove('active');
   }
 }
 

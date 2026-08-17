@@ -839,7 +839,7 @@ a.info-value:hover {
 }
 
 /* ==========================================================================
-   SLEEK MINIMAL VIEW TOGGLES: ORBIT 3D & THE VAULT
+   SLEEK FLOATING LUXURY ACTION: THE VAULT
    ========================================================================== */
 .gallery-controls-bar {
   position: fixed;
@@ -854,52 +854,36 @@ a.info-value:hover {
   border: none;
   padding: 0;
   box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.view-mode-switch {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0;
-  border: none;
 }
 
 .view-toggle-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(14, 14, 18, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.75);
-  padding: 10px 22px;
+  gap: 10px;
+  background: rgba(14, 14, 18, 0.78);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: #FFFFFF;
+  padding: 11px 26px;
   border-radius: 40px;
   font-family: var(--font-sans);
   font-size: 0.85rem;
   font-weight: 500;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5), 0 0 15px rgba(212, 175, 55, 0.12);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
 }
 
 .view-toggle-btn:hover {
-  color: #FFFFFF;
-  border-color: rgba(212, 175, 55, 0.4);
-  background: rgba(24, 24, 30, 0.85);
-  transform: translateY(-2px);
-}
-
-.view-toggle-btn.active {
-  background: var(--accent-color);
   color: #050505;
+  background: var(--accent-color);
   border-color: var(--accent-color);
-  font-weight: 600;
-  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(212, 175, 55, 0.45);
 }
 
 @media (max-width: 768px) {
@@ -907,9 +891,9 @@ a.info-value:hover {
     bottom: 22px;
   }
   .view-toggle-btn {
-    padding: 8px 16px;
-    font-size: 0.76rem;
-    gap: 6px;
+    padding: 9px 20px;
+    font-size: 0.78rem;
+    gap: 8px;
   }
 }
 
