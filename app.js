@@ -1077,7 +1077,7 @@ function handlePointerMove(e) {
   mobileLastTouchY = currentY;
   
   const bp = CONFIG.breakpoints.mobile;
-  const scrollDelta = (deltaY - deltaX) * bp.dragSensitivity;
+  const scrollDelta = -(deltaY - deltaX) * bp.dragSensitivity;
   mobileScrollAngle += scrollDelta;
   
   const now = performance.now();
